@@ -270,7 +270,10 @@
           if(isEmpty($scope.copy)) {
             return $mdToast.showSimple('El documento no puede estar vacío.');
           }
-          $scope.ngModel = $scope.copy;
+          for(var i in $scope.ngModel) {
+            delete $scope.ngModel[i];
+          }
+          angular.copy($scope.ngModel, $scope.copy);
           $scope.done({canceled: false});
         };
         $scope.doCancel = function() {

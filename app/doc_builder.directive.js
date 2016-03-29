@@ -242,7 +242,7 @@
           if($scope.schema && isEmpty(value)) {
             $scope.copy=buildDocument($scope.schema);
           }
-          if(!$scope.schema || (!$scope.schema.properties && !$scope.schema.items)) {
+          if(!$scope.schema || ((!$scope.schema.properties||isEmpty($scope.schema.properties)) && (!$scope.schema.items||isEmpty($scope.schema.items)))) {
             $scope.schema = buildSchema(value);
           }
         });

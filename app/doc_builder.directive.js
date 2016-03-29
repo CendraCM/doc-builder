@@ -273,7 +273,7 @@
           for(var i in $scope.ngModel) {
             delete $scope.ngModel[i];
           }
-          angular.copy($scope.ngModel, $scope.copy);
+          $scope.ngModel = angular.copy({}, $scope.copy);
           $scope.done({canceled: false});
         };
         $scope.doCancel = function() {

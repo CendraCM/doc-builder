@@ -6,7 +6,7 @@
       '<div layout="row">'+
         '<md-input-container>'+
           '<label>Titulo Documento</label>'+
-          '<input ng-model="ngModel.objName" name="documentName" required/>'+
+          '<input ng-model="copy.objName" name="documentName" required/>'+
         '</md-input-container>'+
         '<span flex></span>'+
         '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
@@ -18,33 +18,33 @@
       '</div>'+
     '</form>'+
     '<md-list ng-switch="schema.type" layout="column" flex ng-class="{\'md-whiteframe-1dp\': !isChild}">'+
-      '<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
+      '<div ng-switch-when="array" ng-repeat="item in copy track by $index">'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1">{{item}}</span>'+
           '</md-button>'+
           '<doc-builder ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1">{{item}}</span>'+
           '</md-button>'+
           '<doc-builder ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
           '</md-button>'+
           '<doc-builder ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
       '</div>'+
-      '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
+      '<div ng-switch-when="object" ng-repeat="(key, val) in copy|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
         '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key}" ng-click="select(key)">{{key}}:</md-button> '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key}" ng-click="select(key)">{{key}}:</md-button> '+
           '<doc-builder schema="schema.properties[key]" ng-model="val" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
         '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
         '</md-menu-item>'+
       '</div  >'+
     '</md-list>'+
@@ -227,18 +227,26 @@
       controller: function($scope, $mdToast) {
         $scope.isChild = $scope.edit=='child';
         $scope.edit=$scope.isChild?false:$scope.edit;
-        if(!$scope.isChild) {
-          var modelCopy = $scope.ngModel?angular.merge({}, $scope.ngModel):null;
-        }
-        if(!$scope.isChild && !$scope.ngModel) {
-          $scope.edit = true;
-        }
-        if($scope.schema && !$scope.ngModel) {
-          $scope.ngModel=buildDocument($scope.schema);
-        }
+        $scope.copy = {};
         if(!$scope.ngModel) {
           $scope.ngModel={};
         }
+        $scope.$watch('ngModel', function(value) {
+          if(!$scope.isChild) {
+            $scope.copy = angular.merge({}, value);
+          }
+          if(!$scope.isChild && !value) {
+            $scope.edit = true;
+          }
+          if($scope.schema && !value) {
+            $scope.copy=buildDocument($scope.schema);
+          }
+          if(!$scope.schema) {
+            $scope.schema = buildSchema(value);
+          }
+        });
+
+
 
         $scope.types = {
           'array': 'Conjunto',
@@ -248,24 +256,22 @@
           'string': 'Texto',
           'boolean': 'Verdadero/Falso'
         };
-        if(!$scope.schema) {
-          $scope.schema = buildSchema($scope.ngModel);
-        }
+
         $scope.getType = getType;
         $scope.selected = {parent: null, key: null, schema: null};
         $scope.doSave = function(mainForm) {
           mainForm.documentName.$setDirty();
           mainForm.documentName.$setTouched();
-          if(isEmpty($scope.ngModel.objName)) {
+          if(isEmpty($scope.copy.objName)) {
             return $mdToast.showSimple('Debe Proporcionar un Nombre para el Documento.');
           }
-          if(isEmpty($scope.ngModel)) {
+          if(isEmpty($scope.copy)) {
             return $mdToast.showSimple('El documento no puede estar vacío.');
           }
+          $scope.ngModel = $scope.copy;
           $scope.done({canceled: false});
         };
         $scope.doCancel = function() {
-          $scope.ngModel = modelCopy;
           $scope.done({canceled: true});
         };
         $scope.typeChange = function(){
@@ -366,9 +372,9 @@
 
         $scope.select = function(key) {
           if(!$scope.schema) {
-            $scope.schema = {type: getType($scope.ngModel[key])};
+            $scope.schema = {type: getType($scope.copy[key])};
           }
-          var element = {parent: $scope.ngModel, key: key, schema: $scope.schema};
+          var element = {parent: $scope.copy, key: key, schema: $scope.schema};
           if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
             element = {parent: null, key: null, schema: null};
           }
@@ -380,8 +386,8 @@
         if($scope.edit) {
           $scope.$on('docBuilder:rootSelect', function($event, element) {
             if(!element.parent) {
-              element = {schema: $scope.schema, root: $scope.ngModel};
-              $scope.phantom = angular.merge({}, {schema: element.schema, value: $scope.ngModel});
+              element = {schema: $scope.schema, root: $scope.copy};
+              $scope.phantom = angular.merge({}, {schema: element.schema, value: $scope.copy});
             } else {
               $scope.phantom = angular.merge({}, {schema: element.schema, value: element.parent[element.key]});
             }

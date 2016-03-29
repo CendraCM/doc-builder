@@ -221,6 +221,7 @@
       scope: {
         ngModel: '=',
         schema: '=?',
+        restrict: '<?',
         edit: '<?',
         done: '&'
       },
@@ -235,13 +236,13 @@
           if(!$scope.isChild) {
             $scope.copy = angular.merge({}, value);
           }
-          if(!$scope.isChild && !value) {
+          if(!$scope.isChild && isEmpty(value)) {
             $scope.edit = true;
           }
-          if($scope.schema && !value) {
+          if($scope.schema && isEmpty(value)) {
             $scope.copy=buildDocument($scope.schema);
           }
-          if(!$scope.schema) {
+          if(!$scope.schema || (!$scope.schema.properties && !$scope.schema.items)) {
             $scope.schema = buildSchema(value);
           }
         });

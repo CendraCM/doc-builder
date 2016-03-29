@@ -193,6 +193,7 @@
         action = action.substr(1);
       }
       angular.forEach(object, function(value, key) {
+        if(key=='_id') return;
         var add = false;
         if(action == '=' && ((!not && key == filterString)||(not && key != filterString))) {
           add = true;

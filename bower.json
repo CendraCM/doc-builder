@@ -1,0 +1,25 @@
+{
+  "name": "doc-builder",
+  "homepage": "https://github.com/CendraCM/doc-builder",
+  "authors": [
+    "Agustin Moyano <agustin.moyano@gmail.com>"
+  ],
+  "description": "",
+  "main": [
+    "app/doc_builder.directive.js",
+    "app/doc_builder.css"
+  ],
+  "dependencies": {
+    "angular-material": "^1.0.6"
+  },
+  "moduleType": [],
+  "license": "GPL-v3",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

@@ -229,13 +229,13 @@
       controller: function($scope, $mdToast) {
         $scope.isChild = $scope.edit=='child';
         $scope.edit=$scope.isChild?false:$scope.edit;
-        $scope.copy = {};
         if(!$scope.ngModel) {
           $scope.ngModel={};
         }
         $scope.$watch('ngModel', function(value) {
           if(!$scope.isChild) {
             $scope.copy = angular.merge({}, value);
+            $scope.$emit('docBuilder:rootSelect', {});
           }
           if(!$scope.isChild && isEmpty(value)) {
             $scope.edit = true;
@@ -398,7 +398,6 @@
             }
             $scope.$broadcast('docBuilder:select', element);
           });
-          $scope.$emit('docBuilder:rootSelect', {});
         }
       },
       link: function(scope, element, attrs) {

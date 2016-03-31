@@ -20,19 +20,19 @@
     '<md-list ng-switch="schema.type" layout="column" flex ng-class="{\'md-whiteframe-1dp\': !isChild}">'+
       '<div ng-switch-when="array" ng-repeat="item in copy track by $index">'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1">{{item}}</span>'+
           '</md-button>'+
           '<doc-builder ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1">{{item}}</span>'+
           '</md-button>'+
           '<doc-builder ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index}}: '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
           '</md-button>'+
           '<doc-builder ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" edit="\'child\'"></doc-builder>'+
@@ -236,12 +236,14 @@
           if(!$scope.isChild) {
             $scope.copy = angular.merge({}, value);
             $scope.$emit('docBuilder:rootSelect', {});
-          }
-          if(!$scope.isChild && isEmpty(value)) {
-            $scope.edit = true;
-          }
-          if($scope.schema && isEmpty(value)) {
-            $scope.copy=buildDocument($scope.schema);
+            if(isEmpty(value)) {
+              $scope.edit = true;
+            }
+            if($scope.schema && isEmpty(value)) {
+              $scope.copy=buildDocument($scope.schema);
+            }
+          } else {
+            $scope.copy = $scope.ngModel;
           }
           if(!$scope.schema || ((!$scope.schema.properties||isEmpty($scope.schema.properties)) && (!$scope.schema.items||isEmpty($scope.schema.items)))) {
             $scope.schema = buildSchema(value);

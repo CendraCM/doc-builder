@@ -370,7 +370,7 @@
               schema = type=='array'?obj.schema.items[$scope.selected.key]:obj.schema.items;
               break;
             case "object":
-              schema = obj.schema.properties[obj.key];
+              schema = obj.schema.properties[$scope.selected.key];
           }
           return schema;
         }

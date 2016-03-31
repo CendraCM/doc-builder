@@ -40,11 +40,11 @@
       '</div>'+
       '<div ng-switch-when="object" ng-repeat="(key, val) in copy|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
         '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key}" ng-click="select(key)">{{key}}:</md-button> '+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">{{key}}:</md-button> '+
           '<doc-builder schema="schema.properties[key]" ng-model="val" edit="\'child\'"></doc-builder>'+
         '</md-menu-item>'+
         '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
+          '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
         '</md-menu-item>'+
       '</div  >'+
     '</md-list>'+
@@ -104,7 +104,7 @@
           '<div layout-fill>{{selected.key}}</div>'+
         '</md-checkbox>'+
         '<span flex></span>'+
-        '<md-button ng-if="!selected.root" class="md-icon-button" ng-click="delete()">'+
+        '<md-button ng-if="!selected.root && (!getSelectedSchema().required || getSelectedSchema().required.indexOf(selected.key)===-1)" class="md-icon-button" ng-click="delete()">'+
           '<md-icon md-font-set="material-icons">delete</md-icon>'+
         '</md-button>'+
       '</div>'+
@@ -261,7 +261,50 @@
           'boolean': 'Verdadero/Falso'
         };
 
+        var failConstraints = function(model, schema) {
+          if(schema) {
+            switch(schema.type) {
+              case "object":
+                if(schema.required) {
+                  var fails = false;
+                  schema.required.forEach(function(property) {
+                    if(!fails && isEmpty(model[property])) {
+                      fails = "Faltan completar elementos obligatorios";
+                      return false;
+                    }
+                  });
+                  if(fails) return fails;
+                  for(var i in model) {
+                    if(fails = failConstraints(model[i], schema[i])) {
+                      break;
+                    }
+                  }
+                  return fails;
+                }
+                break;
+              case "array":
+                var fails = false;
+                if(getType(schema.items) == 'object') {
+                  model.forEach(function(item) {
+                    if(fails = failConstraints(item, schema.items)) {
+                      return false;
+                    }
+                  });
+                } else {
+                  schema.items.forEach(function(schema, index) {
+                    if(fails = failConstraints(model[index], schema)) {
+                      return false;
+                    }
+                  });
+                }
+                return fails;
+            }
+          }
+          return false;
+        };
+
         $scope.getType = getType;
+        $scope.isEmpty = isEmpty;
         $scope.selected = {parent: null, key: null, schema: null};
         $scope.doSave = function(mainForm) {
           mainForm.documentName.$setDirty();
@@ -271,6 +314,11 @@
           }
           if(isEmpty($scope.copy)) {
             return $mdToast.showSimple('El documento no puede estar vacío.');
+          }
+          var error;
+          if(error = failConstraints($scope.copy, $scope.schema)) {
+            $scope.dirty = true;
+            return $mdToast.showSimple(error);
           }
           for(var i in $scope.ngModel) {
             delete $scope.ngModel[i];

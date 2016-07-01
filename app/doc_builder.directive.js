@@ -265,22 +265,29 @@
           if(schema) {
             switch(schema.type) {
               case "object":
+                var fails = false;
                 if(schema.required) {
-                  var fails = false;
                   schema.required.forEach(function(property) {
                     if(!fails && isEmpty(model[property])) {
                       fails = "Faltan completar elementos obligatorios";
                       return false;
                     }
                   });
-                  if(fails) return fails;
-                  for(var i in model) {
-                    if(fails = failConstraints(model[i], schema[i])) {
+                } else {
+                  for(var i in schema.properties) {
+                    if(schema.properties[i].required && isEmpty(model[i])) {
+                      fails = "Faltan completar elementos obligatorios";
                       break;
                     }
                   }
-                  return fails;
                 }
+                if(fails) return fails;
+                for(var i in model) {
+                  if(fails = failConstraints(model[i], schema[i])) {
+                    break;
+                  }
+                }
+                return fails;
                 break;
               case "array":
                 var fails = false;

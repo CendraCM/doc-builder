@@ -122,8 +122,8 @@
       }
       return true;
     }
-    return angular.isUndefined(element)||element==null;
-  }
+    return angular.isUndefined(element)||element===null;
+  };
 
   var buildSchema = function(element) {
     if(angular.isUndefined(element)) return;
@@ -146,10 +146,10 @@
         angular.forEach(element, function(value, key) {
           schema.properties[key] = buildSchema(value);
         });
-        break
+        break;
     }
     return schema;
-  }
+  };
 
   function buildDocument(schema) {
     var document = null;
@@ -177,7 +177,7 @@
     if(angular.isObject(element)) {
       return 'object';
     }
-    return element==null?'null':typeof element;
+    return element===null?'null':typeof element;
   }
 
   angular.module('cendra.builder', [])
@@ -224,7 +224,8 @@
         schema: '=?',
         restrict: '<?',
         edit: '<?',
-        done: '&'
+        done: '&',
+        schemaList: '=?'
       },
       controller: function($scope, $mdToast) {
         $scope.isChild = $scope.edit=='child';
@@ -263,9 +264,9 @@
 
         var failConstraints = function(model, schema) {
           if(schema) {
+            var fails = false;
             switch(schema.type) {
               case "object":
-                var fails = false;
                 if(schema.required) {
                   schema.required.forEach(function(property) {
                     if(!fails && isEmpty(model[property])) {
@@ -282,15 +283,13 @@
                   }
                 }
                 if(fails) return fails;
-                for(var i in model) {
-                  if(fails = failConstraints(model[i], schema[i])) {
+                for(var j in model) {
+                  if(fails = failConstraints(model[j], schema[j])) {
                     break;
                   }
                 }
                 return fails;
-                break;
               case "array":
-                var fails = false;
                 if(getType(schema.items) == 'object') {
                   model.forEach(function(item) {
                     if(fails = failConstraints(item, schema.items)) {
@@ -373,7 +372,7 @@
             delete $scope.selected.parent[$scope.selected.key];
           }
           $scope.$emit('docBuilder:rootSelect', {parent: null, key: null, schema: null});
-        }
+        };
 
         $scope.doAction = function() {
           var element = $scope.selected.root||$scope.selected.parent[$scope.selected.key];
@@ -413,7 +412,7 @@
                 });
               }
           }
-        }
+        };
 
         $scope.getSelectedSchema = function(phantom) {
           var obj = phantom?$scope.phantom:$scope.selected;
@@ -430,7 +429,7 @@
               schema = obj.schema.properties[$scope.selected.key];
           }
           return schema;
-        }
+        };
 
         $scope.select = function(key) {
           if(!$scope.schema) {
@@ -460,6 +459,6 @@
       link: function(scope, element, attrs) {
         scope.edit != 'child' && element.addClass('root');
       }
-    }
+    };
   });
 })();

@@ -18,3 +18,11 @@ doc-builder.root > md-list {
 .schema-type {
   min-width: 150px;
 }
+
+doc-builder schema-list.ng-leave {
+  animation: 1s slideup
+}
+
+doc-builder schema-list.ng-enter {
+  animation: 1s slidedown
+}

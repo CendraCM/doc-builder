@@ -1,53 +1,41 @@
 (function(){
   'use strict';
 
-  var template=
-    '<form name="mainForm" ng-if="!isChild" md-whiteframe="2" layout-padding>'+
-      '<div layout="row">'+
-        '<md-input-container>'+
-          '<label>Titulo Documento</label>'+
-          '<input ng-model="copy.objName" name="documentName" required/>'+
-        '</md-input-container>'+
-        '<span flex></span>'+
-        '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
-          '<md-icon md-font-set="material-icons">save</md-icon>'+
-        '</md-button>'+
-        '<md-button class="md-icon-button" ng-click="doCancel()">'+
-          '<md-icon md-font-set="material-icons">cancel</md-icon>'+
-        '</md-button>'+
-      '</div>'+
-    '</form>'+
+  var treeTemplate =
     '<md-list ng-switch="schema.type" layout="column" flex ng-class="{\'md-whiteframe-1dp\': !isChild}">'+
-      '<div ng-switch-when="array" ng-repeat="item in copy track by $index">'+
+      '<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1">{{item}}</span>'+
           '</md-button>'+
-          '<doc-builder ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" edit="\'child\'"></doc-builder>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" edit="\'child\'"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1">{{item}}</span>'+
           '</md-button>'+
-          '<doc-builder ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" edit="\'child\'"></doc-builder>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" edit="\'child\'"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
           '</md-button>'+
-          '<doc-builder ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" edit="\'child\'"></doc-builder>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" edit="\'child\'"></doc-builder-tree>'+
         '</md-menu-item>'+
       '</div>'+
-      '<div ng-switch-when="object" ng-repeat="(key, val) in copy|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
+      '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
         '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">{{key}}:</md-button> '+
-          '<doc-builder schema="schema.properties[key]" ng-model="val" edit="\'child\'"></doc-builder>'+
+          '<doc-builder-tree schema="schema.properties[key]" ng-model="val" edit="\'child\'"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
         '</md-menu-item>'+
       '</div  >'+
-    '</md-list>'+
+    '</md-list>';
+
+  var tabTemplate =
+    '<doc-builder-tree schema="schema" ng-model="ngModel"></doc-builder-tree>'+
     '<form ng-submit="doAction()" ng-if="edit && edit!=\'child\' && (selected.parent||selected.root)" ng-switch="getSelectedSchema().type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding>'+
         '<md-input-container class="schema-type" ng-if="!selected.root">'+
@@ -110,6 +98,42 @@
       '</div>'+
     '</form>';
 
+  var template=
+    '<form name="mainForm" ng-if="!isChild" md-whiteframe="2" layout-padding>'+
+      '<div layout="row">'+
+        '<div layout="column">'+
+          '<md-input-container>'+
+            '<label>Titulo Documento</label>'+
+            '<input ng-model="copy.objName" name="documentName" required/>'+
+          '</md-input-container>'+
+          '<md-input-container ng-show="editMetadata">'+
+            '<label>Descripci&oacute;n</label>'+
+            '<input ng-model="copy.objDescription" name="documentDescription"/>'+
+          '</md-input-container>'+
+        '</div>'+
+        '<md-button class="md-icon-button" ng-click="editMetadata=!editMetadata">'+
+          '<md-icon md-font-set="material-icons">edit</md-icon>'+
+        '</md-button>'+
+        '<span flex></span>'+
+        '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
+          '<md-icon md-font-set="material-icons">save</md-icon>'+
+        '</md-button>'+
+        '<md-button class="md-icon-button" ng-click="doCancel()">'+
+          '<md-icon md-font-set="material-icons">cancel</md-icon>'+
+        '</md-button>'+
+      '</div>'+
+    '</form>'+
+    '<div layout="row">'+
+      '<md-button class="md-icon-button" ng-click="selectBase()">'+
+        'base'+
+      '</md-button>'+
+      '<md-button ng-if="copy.objInterface&&copy.objInterface.length" ng-repeat="interface in copy.objInterface" ng-click="selectInterface(interface)">{{getName(interface)}}</md-button>'+
+      '<md-button class="md-icon-button" ng-click="addInterface()">'+
+        '<md-icon md-font-set="material-icons">add</md-icon>'+
+      '</md-button>'+
+    '</div>'+
+    '<doc-builder-tab ng-model="selectedModel" schema="interfaces[selectedInterface]"></doc-builder-tab>';
+
   var isEmpty = function(element) {
     var type = getType(element);
     if(type=='array') {
@@ -122,8 +146,8 @@
       }
       return true;
     }
-    return angular.isUndefined(element)||element==null;
-  }
+    return angular.isUndefined(element)||element===null;
+  };
 
   var buildSchema = function(element) {
     if(angular.isUndefined(element)) return;
@@ -146,10 +170,10 @@
         angular.forEach(element, function(value, key) {
           schema.properties[key] = buildSchema(value);
         });
-        break
+        break;
     }
     return schema;
-  }
+  };
 
   function buildDocument(schema) {
     var document = null;
@@ -177,7 +201,7 @@
     if(angular.isObject(element)) {
       return 'object';
     }
-    return element==null?'null':typeof element;
+    return element===null?'null':typeof element;
   }
 
   angular.module('cendra.builder', [])
@@ -221,18 +245,19 @@
       template: template,
       scope: {
         ngModel: '=',
-        schema: '=?',
         restrict: '<?',
         edit: '<?',
-        done: '&'
+        done: '&',
+        interfaces: '=?'
       },
       controller: function($scope, $mdToast) {
-        $scope.isChild = $scope.edit=='child';
-        $scope.edit=$scope.isChild?false:$scope.edit;
         if(!$scope.ngModel) {
           $scope.ngModel={};
         }
         $scope.$watch('ngModel', function(value) {
+          $scope.copy = angular.merge({}, value);
+        });
+        /*$scope.$watch('ngModel', function(value) {
           if(!$scope.isChild) {
             $scope.copy = angular.merge({}, value);
             $scope.$emit('docBuilder:rootSelect', {});
@@ -260,12 +285,12 @@
           'string': 'Texto',
           'boolean': 'Verdadero/Falso'
         };
-
+*/
         var failConstraints = function(model, schema) {
           if(schema) {
+            var fails = false;
             switch(schema.type) {
               case "object":
-                var fails = false;
                 if(schema.required) {
                   schema.required.forEach(function(property) {
                     if(!fails && isEmpty(model[property])) {
@@ -282,15 +307,13 @@
                   }
                 }
                 if(fails) return fails;
-                for(var i in model) {
-                  if(fails = failConstraints(model[i], schema[i])) {
+                for(var j in model) {
+                  if(fails = failConstraints(model[j], schema[j])) {
                     break;
                   }
                 }
                 return fails;
-                break;
               case "array":
-                var fails = false;
                 if(getType(schema.items) == 'object') {
                   model.forEach(function(item) {
                     if(fails = failConstraints(item, schema.items)) {
@@ -310,9 +333,9 @@
           return false;
         };
 
-        $scope.getType = getType;
+/*        $scope.getType = getType;
         $scope.isEmpty = isEmpty;
-        $scope.selected = {parent: null, key: null, schema: null};
+        $scope.selected = {parent: null, key: null, schema: null};*/
         $scope.doSave = function(mainForm) {
           mainForm.documentName.$setDirty();
           mainForm.documentName.$setTouched();
@@ -336,7 +359,7 @@
         $scope.doCancel = function() {
           $scope.done({canceled: true});
         };
-        $scope.typeChange = function(){
+        /*$scope.typeChange = function(){
           var schema = $scope.getSelectedSchema();
           var pschema = $scope.getSelectedSchema(true);
           if(schema.type == pschema.type) {
@@ -373,7 +396,7 @@
             delete $scope.selected.parent[$scope.selected.key];
           }
           $scope.$emit('docBuilder:rootSelect', {parent: null, key: null, schema: null});
-        }
+        };
 
         $scope.doAction = function() {
           var element = $scope.selected.root||$scope.selected.parent[$scope.selected.key];
@@ -413,7 +436,7 @@
                 });
               }
           }
-        }
+        };
 
         $scope.getSelectedSchema = function(phantom) {
           var obj = phantom?$scope.phantom:$scope.selected;
@@ -430,7 +453,7 @@
               schema = obj.schema.properties[$scope.selected.key];
           }
           return schema;
-        }
+        };
 
         $scope.select = function(key) {
           if(!$scope.schema) {
@@ -455,11 +478,32 @@
             }
             $scope.$broadcast('docBuilder:select', element);
           });
-        }
-      },
-      link: function(scope, element, attrs) {
-        scope.edit != 'child' && element.addClass('root');
+        }*/
       }
-    }
+    };
+  })
+  .directive('docBuilderTab', function($compile) {
+    return {
+      restrict: 'E',
+      scope: {
+        ngModel: '=',
+        schema: '='
+      },
+      template: tabTemplate,
+      compile: function() {
+        return {
+          pre: function(scope, element) {
+            if(scope.schema && scope.schema.objName) {
+              var tagName = scope.schema.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
+              var directive = $compile('<'+tagName+' ng-model="ngModel"></'+tagName+'>')(scope);
+              element.wrap(directive);
+            }
+          }
+        };
+      },
+      controller: function($scope) {
+        
+      }
+    };
   });
 })();

@@ -8,43 +8,43 @@
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1">{{item}}</span>'+
           '</md-button>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" edit="\'child\'"></doc-builder-tree>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1">{{item}}</span>'+
           '</md-button>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" edit="\'child\'"></doc-builder-tree>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
             '<span ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
           '</md-button>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" edit="\'child\'"></doc-builder-tree>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
       '</div>'+
       '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
         '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">{{key}}:</md-button> '+
-          '<doc-builder-tree schema="schema.properties[key]" ng-model="val" edit="\'child\'"></doc-builder-tree>'+
+          '<doc-builder-tree schema="schema.properties[key]" ng-model="val" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == copy && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
         '</md-menu-item>'+
-      '</div  >'+
+      '</div>'+
     '</md-list>';
 
   var tabTemplate =
-    '<doc-builder-tree schema="schema" ng-model="ngModel"></doc-builder-tree>'+
-    '<form ng-submit="doAction()" ng-if="edit && edit!=\'child\' && (selected.parent||selected.root)" ng-switch="getSelectedSchema().type">'+
+    '<doc-builder-tree schema="schema" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
+    '<form ng-submit="doAction()" ng-if="edit" ng-switch="getSelectedSchema().type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding>'+
-        '<md-input-container class="schema-type" ng-if="!selected.root">'+
+        '<md-input-container class="schema-type" ng-disabled="selected.root||interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="getSelectedSchema().type" ng-change="typeChange()">'+
             '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
-        '<md-button type="submit">'+
+        '<md-button type="submit" ng-disabled="">'+
           'Agregar Item'+
         '</md-button>'+
         '<md-button ng-click="clear()">'+
@@ -132,7 +132,7 @@
         '<md-icon md-font-set="material-icons">add</md-icon>'+
       '</md-button>'+
     '</div>'+
-    '<doc-builder-tab ng-model="selectedModel" schema="interfaces[selectedInterface]"></doc-builder-tab>';
+    '<doc-builder-tab ng-model="selectedModel" edit="edit" schema="interfaces[selectedInterface]"></doc-builder-tab>';
 
   var isEmpty = function(element) {
     var type = getType(element);
@@ -245,7 +245,6 @@
       template: template,
       scope: {
         ngModel: '=',
-        restrict: '<?',
         edit: '<?',
         done: '&',
         interfaces: '=?'
@@ -257,35 +256,7 @@
         $scope.$watch('ngModel', function(value) {
           $scope.copy = angular.merge({}, value);
         });
-        /*$scope.$watch('ngModel', function(value) {
-          if(!$scope.isChild) {
-            $scope.copy = angular.merge({}, value);
-            $scope.$emit('docBuilder:rootSelect', {});
-            if(isEmpty(value)) {
-              $scope.edit = true;
-            }
-            if($scope.schema && isEmpty(value)) {
-              $scope.copy=buildDocument($scope.schema);
-            }
-          } else {
-            $scope.copy = $scope.ngModel;
-          }
-          if(!$scope.schema || ((!$scope.schema.properties||isEmpty($scope.schema.properties)) && (!$scope.schema.items||isEmpty($scope.schema.items)))) {
-            $scope.schema = buildSchema(value);
-          }
-        });
 
-
-
-        $scope.types = {
-          'array': 'Conjunto',
-          'date': 'Fecha/Hora',
-          'object': 'Formulario',
-          'number': 'Número',
-          'string': 'Texto',
-          'boolean': 'Verdadero/Falso'
-        };
-*/
         var failConstraints = function(model, schema) {
           if(schema) {
             var fails = false;
@@ -333,9 +304,6 @@
           return false;
         };
 
-/*        $scope.getType = getType;
-        $scope.isEmpty = isEmpty;
-        $scope.selected = {parent: null, key: null, schema: null};*/
         $scope.doSave = function(mainForm) {
           mainForm.documentName.$setDirty();
           mainForm.documentName.$setTouched();
@@ -359,48 +327,106 @@
         $scope.doCancel = function() {
           $scope.done({canceled: true});
         };
-        /*$scope.typeChange = function(){
-          var schema = $scope.getSelectedSchema();
-          var pschema = $scope.getSelectedSchema(true);
-          if(schema.type == pschema.type) {
-            return $scope.selected.parent[$scope.selected.key] = $scope.phantom.value;
-          }
-          switch(schema.type) {
-            case "object":
-              $scope.selected.parent[$scope.selected.key] = {};
-              break;
-            case "array":
-              $scope.selected.parent[$scope.selected.key] = [];
-              break;
-            default:
-              $scope.selected.parent[$scope.selected.key] = null;
-          }
+        /*
 
-        };
-        $scope.clear = function() {
-          var element = $scope.selected.root||$scope.selected.parent[$scope.selected.key];
-          var type = getType(element);
-          if(type=="array") {
-            element.splice(0,element.length);
-          } else {
-            angular.forEach(element, function(value, key) {
-              if(key.substr(0,3)!='obj') delete element[key];
-            });
-          }
-        };
 
-        $scope.delete = function() {
-          if(getType($scope.selected.parent)=='array') {
-            $scope.selected.parent.splice($scope.selected.key,1);
-          } else {
-            delete $scope.selected.parent[$scope.selected.key];
+
+
+        $scope.select = function(key) {
+          if(!$scope.schema) {
+            $scope.schema = {type: getType($scope.copy[key])};
           }
-          $scope.$emit('docBuilder:rootSelect', {parent: null, key: null, schema: null});
+          var element = {parent: $scope.copy, key: key, schema: $scope.schema};
+          if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
+            element = {parent: null, key: null, schema: null};
+          }
+          $scope.$emit('docBuilder:rootSelect', element);
+        };
+        $scope.$on('docBuilder:select', function($event, element) {
+          $scope.selected = element;
+        });
+        if($scope.edit) {
+          $scope.$on('docBuilder:rootSelect', function($event, element) {
+            if(!element.parent) {
+              element = {schema: $scope.schema, root: $scope.copy};
+              $scope.phantom = angular.merge({}, {schema: element.schema, value: $scope.copy});
+            } else {
+              $scope.phantom = angular.merge({}, {schema: element.schema, value: element.parent[element.key]});
+            }
+            $scope.$broadcast('docBuilder:select', element);
+          });
+        }*/
+      }
+    };
+  })
+  .directive('docBuilderTab', function($compile) {
+    return {
+      restrict: 'E',
+      scope: {
+        ngModel: '=',
+        interface: '=',
+        edit: '<?'
+      },
+      template: tabTemplate,
+      compile: function() {
+        return {
+          pre: function(scope, element) {
+            scope.edit = typeof scope.edit==='undefined'?true:scope.edit;
+            if(scope.schema && scope.schema.objName) {
+              var tagName = scope.schema.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
+              var directive = $compile('<'+tagName+' ng-model="ngModel" interface="interface" edit="edit"></'+tagName+'>')(scope);
+              element.wrap(directive);
+            }
+          }
+        };
+      },
+      controller: function($scope) {
+        $scope.$watch('ngModel', function(value) {
+          if($scope.interface && isEmpty(value)) {
+            $scope.schema = angular.merge({}, $scope.interface);
+            $scope.ngModel = buildDocument($scope.schema);
+          } else if(!$scope.interface || ((!$scope.interface.properties||isEmpty($scope.interface.properties)) && (!$scope.interface.items||isEmpty($scope.interface.items)))) {
+            $scope.schema = buildSchema(value);
+          }
+        });
+
+        $scope.selected = {root: true};
+
+        $scope.$watch('selected', function(value) {
+          if(!value) {
+            $scope.selectedSchema = null;
+            return;
+          }
+          if(value.root) {
+            $scope.selectedSchema = $scope.schema;
+            $scope.memo = angular.merge({selectedSchema: selectedSchema}, {value: $scope.ngModel});
+          } else {
+            var schema;
+            switch(value.schema.type) {
+              case "array":
+                var type = getType(value.schema.items);
+                schema = type=='array'?value.schema.items[value.key]:value.schema.items;
+                break;
+              case "object":
+                schema = value.schema.properties[value.key];
+            }
+            $scope.selectedSchema = schema;
+            $scope.memo = angular.merge({selectedSchema: selectedSchema}, {value: value.parent[value.key]});
+          }
+        });
+
+        $scope.types = {
+          'array': 'Conjunto',
+          'date': 'Fecha/Hora',
+          'object': 'Formulario',
+          'number': 'Número',
+          'string': 'Texto',
+          'boolean': 'Verdadero/Falso'
         };
 
         $scope.doAction = function() {
           var element = $scope.selected.root||$scope.selected.parent[$scope.selected.key];
-          var schema = $scope.getSelectedSchema();
+          var schema = $scope.selectedSchema;
           switch(schema.type) {
             case 'array':
               if(getType(schema.items)!='object') {
@@ -438,7 +464,46 @@
           }
         };
 
-        $scope.getSelectedSchema = function(phantom) {
+        $scope.typeChange = function(){
+          var schema = $scope.selectedSchema;
+          var pschema = $scope.memo.selectedSchema;
+          if(schema.type == pschema.type) {
+            return $scope.selected.parent[$scope.selected.key] = $scope.phantom.value;
+          }
+          switch(schema.type) {
+            case "object":
+              $scope.selected.parent[$scope.selected.key] = {};
+              break;
+            case "array":
+              $scope.selected.parent[$scope.selected.key] = [];
+              break;
+            default:
+              $scope.selected.parent[$scope.selected.key] = null;
+          }
+
+        }
+
+        $scope.clear = function() {
+          var element = $scope.selected.root||$scope.selected.parent[$scope.selected.key];
+          var type = getType(element);
+          if(type=="array") {
+            element.splice(0,element.length);
+          } else {
+            angular.forEach(element, function(value, key) {
+              if(key.substr(0,3)!='obj') delete element[key];
+            });
+          }
+        };
+
+        $scope.delete = function() {
+          if(getType($scope.selected.parent)=='array') {
+            $scope.selected.parent.splice($scope.selected.key,1);
+          } else {
+            delete $scope.selected.parent[$scope.selected.key];
+          }
+          $scope.selected = {parent: null, key: null, schema: null};
+        };
+        /*$scope.getSelectedSchema = function(phantom) {
           var obj = phantom?$scope.phantom:$scope.selected;
           if(obj.root) {
             return $scope.schema;
@@ -453,56 +518,33 @@
               schema = obj.schema.properties[$scope.selected.key];
           }
           return schema;
-        };
-
-        $scope.select = function(key) {
-          if(!$scope.schema) {
-            $scope.schema = {type: getType($scope.copy[key])};
-          }
-          var element = {parent: $scope.copy, key: key, schema: $scope.schema};
-          if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
-            element = {parent: null, key: null, schema: null};
-          }
-          $scope.$emit('docBuilder:rootSelect', element);
-        };
-        $scope.$on('docBuilder:select', function($event, element) {
-          $scope.selected = element;
-        });
-        if($scope.edit) {
-          $scope.$on('docBuilder:rootSelect', function($event, element) {
-            if(!element.parent) {
-              element = {schema: $scope.schema, root: $scope.copy};
-              $scope.phantom = angular.merge({}, {schema: element.schema, value: $scope.copy});
-            } else {
-              $scope.phantom = angular.merge({}, {schema: element.schema, value: element.parent[element.key]});
-            }
-            $scope.$broadcast('docBuilder:select', element);
-          });
-        }*/
+        };*/
       }
     };
   })
-  .directive('docBuilderTab', function($compile) {
+  .directive('docBuilderTree', function() {
     return {
       restrict: 'E',
+      template: treeTemplate,
       scope: {
+        schema:'=',
         ngModel: '=',
-        schema: '='
-      },
-      template: tabTemplate,
-      compile: function() {
-        return {
-          pre: function(scope, element) {
-            if(scope.schema && scope.schema.objName) {
-              var tagName = scope.schema.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
-              var directive = $compile('<'+tagName+' ng-model="ngModel"></'+tagName+'>')(scope);
-              element.wrap(directive);
-            }
-          }
-        };
+        selected: '='
       },
       controller: function($scope) {
-        
+        $scope.getType = getType;
+        $scope.isEmpty = isEmpty;
+
+        $scope.select = function(key) {
+          if(!$scope.schema) {
+            $scope.schema = {type: getType($scope.ngModel[key])};
+          }
+          var element = {parent: $scope.ngModel, key: key, schema: $scope.schema};
+          if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
+            element = {parent: null, key: null, schema: null};
+          }
+          $scope.selected = element;
+        };
       }
     };
   });

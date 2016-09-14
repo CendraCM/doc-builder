@@ -115,6 +115,7 @@
           '<md-icon md-font-set="material-icons">edit</md-icon>'+
         '</md-button>'+
         '<span flex></span>'+
+        '{{copy}}'+
         '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
           '<md-icon md-font-set="material-icons">save</md-icon>'+
         '</md-button>'+
@@ -124,15 +125,16 @@
       '</div>'+
     '</form>'+
     '<div layout="row">'+
-      '<md-button ng-if="copy.objInterface && copy.objInterface.length" ng-repeat="interface in copy.objInterface" ng-click="selectInterface(interface)">{{getName(interface).plain}}</md-button>'+
-      '<md-button ng-click="selectBase()" ng-class="{\'md-primary\': selectedModel == copy}">'+
+      '<md-button ng-if="copy.objInterface && copy.objInterface.length" ng-repeat="interface in copy.objInterface" ng-class="{\'md-primary\': selectedInterface == interface}" ng-click="selectInterface(interface)">{{getName(interface).plain}}</md-button>'+
+      '<md-button ng-click="selectInterface()" ng-class="{\'md-primary\': !selectedInterface}">'+
         'base'+
       '</md-button>'+
       '<md-button class="md-icon-button" ng-if="interfaces.length" ng-click="addInterface($event)">'+
         '<md-icon md-font-set="material-icons">add</md-icon>'+
       '</md-button>'+
     '</div>'+
-    '<doc-builder-tab ng-model="selectedModel" edit="edit" interface="selectedInterface" interfaceList="interfaces"></doc-builder-tab>';
+    '<doc-builder-tab ng-model="copy[getName(interface).key]" ng-if="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
+    '<doc-builder-tab ng-model="copy" ng-if="!selectedInterface" edit="edit" interfaceList="interfaces"></doc-builder-tab>';
 
   var dialogTemplate =
     '<md-dialog>'+
@@ -167,7 +169,7 @@
   };
 
   var buildSchema = function(element) {
-    if(angular.isUndefined(element)) return;
+    if(angular.isUndefined(element)||element == null) return;
     var schema = {};
     element.objName && (schema.title=element.objName);
     schema.type=getType(element);
@@ -279,6 +281,14 @@
           }
         });
 
+        $scope.$watch('interfaces', function(value) {
+          value = value||[];
+          $scope.map = {};
+          value.forEach(function(iface) {
+            $scope.map[iface._id] = iface;
+          });
+        });
+
         var failConstraints = function(model, schema) {
           if(schema) {
             var fails = false;
@@ -369,13 +379,21 @@
           .then(function(iface) {
             if(!$scope.copy.objInterface) $scope.copy.objInterface=[];
             $scope.copy.objInterface.push(iface._id);
+            $scope.selectInterface(iface._id);
           });
         };
 
+        $scope.selectInterface = function(iface) {
+          $scope.selectedInterface = iface;
+          if(!iface) return;
+          var key = $scope.getName(iface).key;
+          if(!$scope.copy[key]) $scope.copy[key] = {};
+        };
+
         $scope.getName = function(id) {
-          var filtered = $scope.interfaces.filter(function(iface) { return iface._id == id;});
-          if(!filtered.length) return '';
-          var ifaceName = filtered[0].objName;
+          var iface = $scope.map[id];
+          if(!iface) return '';
+          var ifaceName = iface.objName;
           var match;
           if((match = ifaceName.match(/^(.+)Interface$/))) {
             ifaceName = match[1];
@@ -386,6 +404,7 @@
             key: parts.join('-').toLowerCase()
           };
         };
+
       }
     };
   })
@@ -402,9 +421,9 @@
       compile: function() {
         return {
           pre: function(scope, element) {
-            scope.edit = typeof scope.edit==='undefined'?true:scope.edit;
-            if(scope.schema && scope.schema.objName) {
-              var tagName = scope.schema.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
+            scope.edit = angular.isUndefined(scope.edit)||scope.edit;
+            if(scope.interface && scope.interface.objName) {
+              var tagName = scope.interface.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
               var directive = $compile('<'+tagName+' ng-model="ngModel" interface="interface" edit="edit"></'+tagName+'>')(scope);
               element.wrap(directive);
             }
@@ -414,9 +433,9 @@
       controller: function($scope) {
         if(!$scope.ngModel) $scope.ngModel = {};
         $scope.$watch('ngModel', function(value) {
-          if($scope.interface && isEmpty(value)) {
+          if($scope.interface) {
             $scope.schema = angular.merge({}, $scope.interface);
-            $scope.ngModel = buildDocument($scope.schema);
+            if(isEmpty(value)) $scope.ngModel = buildDocument($scope.schema);
           } else if(!$scope.interface || ((!$scope.interface.properties||isEmpty($scope.interface.properties)) && (!$scope.interface.items||isEmpty($scope.interface.items)))) {
             $scope.schema = buildSchema(value);
           }
@@ -431,7 +450,7 @@
           }
           if(value.root) {
             $scope.selectedSchema = $scope.schema;
-            $scope.memo = angular.merge({selectedSchema: $scope.selectedSchema}, {value: $scope.ngModel});
+            $scope.memo = angular.merge({}, {selectedSchema: $scope.selectedSchema, value: $scope.ngModel});
           } else {
             var schema;
             switch(value.schema.type) {
@@ -443,7 +462,7 @@
                 schema = value.schema.properties[value.key];
             }
             $scope.selectedSchema = schema;
-            $scope.memo = angular.merge({selectedSchema: $scope.selectedSchema}, {value: value.parent[value.key]});
+            $scope.memo = angular.merge({}, {selectedSchema: $scope.selectedSchema, value: value.parent[value.key]});
           }
         });
 
@@ -499,7 +518,7 @@
         $scope.typeChange = function(){
           var schema = $scope.selectedSchema;
           var pschema = $scope.memo.selectedSchema;
-          if(schema.type == pschema.type) {
+          if(schema.type == pschema.type && !angular.isUndefined($scope.memo.value)) {
             return $scope.selected.parent[$scope.selected.key] = $scope.memo.value;
           }
           switch(schema.type) {

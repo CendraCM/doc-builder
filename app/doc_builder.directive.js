@@ -35,8 +35,8 @@
     '</md-list>';
 
   var tabTemplate =
-    '<doc-builder-tree schema="schema" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
-    '<form ng-submit="doAction()" ng-if="edit" ng-switch="selectedSchema.type">'+
+    '<doc-builder-tree ng-if="!hideTab" schema="schema" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
+    '<form ng-submit="doAction()" ng-if="edit && !hideTab" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding>'+
         '<md-input-container class="schema-type" ng-disabled="selected.root||interface">'+
           '<label>Tipo Elemento</label>'+
@@ -440,13 +440,13 @@
             $scope.schema = buildSchema(value);
           }
           if(!$scope.schema) $scope.schema = {type: 'object'};
+          if(!$scope.selected) $scope.$emit('docBuilder:select', null);
         });
 
-        $scope.selected = {root: $scope.ngModel};
-        $scope.$watch('selected', function(value) {
+        $scope.$on('docBuilder:select', function($event, value) {
+          $event.stopPropagation();
           if(!value) {
-            $scope.selected = {root: $scope.ngModel};
-            return;
+            value = {root: $scope.ngModel};
           }
           if(value.root) {
             $scope.selectedSchema = $scope.schema;
@@ -464,6 +464,7 @@
             $scope.selectedSchema = schema;
             $scope.memo = angular.merge({}, {selectedSchema: $scope.selectedSchema, value: value.parent[value.key]});
           }
+          $scope.selected = value;
         });
 
         $scope.types = {
@@ -594,7 +595,7 @@
           if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
             element = null;//{parent: null, key: null, schema: null};
           }
-          $scope.selected = element;
+          $scope.$emit('docBuilder:select', element);
         };
       }
     };

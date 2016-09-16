@@ -2,7 +2,7 @@
   'use strict';
 
   var treeTemplate =
-    '<md-list ng-switch="schema.type" layout="column" flex ng-class="{\'md-whiteframe-1dp\': !isChild}">'+
+    '<md-list ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
           '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
@@ -133,8 +133,8 @@
         '<md-icon md-font-set="material-icons">add</md-icon>'+
       '</md-button>'+
     '</div>'+
-    '<doc-builder-tab ng-model="copy[getName(interface).key]" ng-if="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
-    '<doc-builder-tab ng-model="copy" ng-if="!selectedInterface" edit="edit" interfaceList="interfaces"></doc-builder-tab>';
+    '<doc-builder-tab ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
+    '<doc-builder-tab ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces"></doc-builder-tab>';
 
   var dialogTemplate =
     '<md-dialog>'+
@@ -408,7 +408,7 @@
       }
     };
   })
-  .directive('docBuilderTab', function($compile) {
+  .directive('docBuilderTab', function($compile, $injector) {
     return {
       restrict: 'E',
       scope: {
@@ -423,9 +423,13 @@
           pre: function(scope, element) {
             scope.edit = angular.isUndefined(scope.edit)||scope.edit;
             if(scope.interface && scope.interface.objName) {
-              var tagName = scope.interface.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
-              var directive = $compile('<'+tagName+' ng-model="ngModel" interface="interface" edit="edit"></'+tagName+'>')(scope);
-              element.wrap(directive);
+              var directiveName = scope.interface.objName.replace(/^\w/, function(x) {return x.toLowerCase();})+'Directive';
+              if($injector.has(directiveName)) {
+                scope.hideTab = true;
+                var tagName = scope.interface.objName.match(/([A-Za-z][a-z0-9]*)/g).join('-').toLowerCase();
+                var directive = $compile('<'+tagName+' ng-model="ngModel" interface="interface" edit="edit"></'+tagName+'>')(scope);
+                element.append(directive);
+              }
             }
           }
         };

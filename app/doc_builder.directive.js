@@ -2,40 +2,49 @@
   'use strict';
 
   var treeTemplate =
-    '<md-list ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
+    '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">'+
+            '<span ng-colors="::{background: \'primary\'}" layout-padding>{{$index+1}}</span>'+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1">{{item}}</span>'+
-          '</md-button>'+
+          '</div>'+
           '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">'+
+            '<span ng-colors="::{background: \'primary\'}" layout-padding>{{$index+1}}</span>'+
             '<span ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1">{{item}}</span>'+
-          '</md-button>'+
+          '</div>'+
           '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">{{$index+1}}: '+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">'+
+            '<span ng-colors="::{background: \'primary\'}" layout-padding>{{$index+1}}</span>'+
             '<span ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
-          '</md-button>'+
+          '</div>'+
           '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
       '</div>'+
       '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
         '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">{{key}}:</md-button> '+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">'+
+            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-400\':\'primary\'}">{{key}}</span>'+
+            '<span flex></span>'+
+          '</div> '+
           '<doc-builder-tree schema="schema.properties[key]" ng-model="val" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
-          '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)">{{key}}: {{val}}</md-button>'+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)" layout="row">'+
+            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-400\':\'primary\'}">{{key}}</span>'+
+            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == key&&\'primary-700\'}">{{val}}</span>'+
+          '</div>'+
         '</md-menu-item>'+
       '</div>'+
     '</md-list>';
 
   var tabTemplate =
-    '<doc-builder-tree ng-if="!hideTab" schema="schema" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
+    '<doc-builder-tree flex layout="column" ng-if="!hideTab" schema="schema" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
     '<form ng-submit="doAction()" ng-if="edit && !hideTab" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding>'+
         '<md-input-container class="schema-type" ng-disabled="selected.root||interface">'+
@@ -133,8 +142,8 @@
         '<md-icon md-font-set="material-icons">add</md-icon>'+
       '</md-button>'+
     '</div>'+
-    '<doc-builder-tab ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
-    '<doc-builder-tab ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces"></doc-builder-tab>';
+    '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
+    '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces"></doc-builder-tab>';
 
   var dialogTemplate =
     '<md-dialog>'+

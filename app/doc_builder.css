@@ -7,8 +7,22 @@ doc-builder md-menu-item > * {
   width: auto;
 }
 
+doc-builder md-menu-item > div {
+  min-height: 48px;
+  position: relative;
+  outline: none;
+}
+
+doc-builder md-menu-item > div .lbl {
+  text-align: right;
+}
+
 doc-builder {
   flex-direction: column;
+}
+
+doc-builder-tab > doc-builder-tree > md-list {
+  overflow: auto;
 }
 
 doc-builder.root > md-list {

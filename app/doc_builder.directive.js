@@ -3,105 +3,114 @@
 
   var treeTemplate =
     '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
-      '<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
+      '<md-menu-item layout="column" ng-repeat="item in iteration">'+
+        '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)">'+
+          '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == item.key?\'primary-400\':\'primary\'}">{{item.label}}</span>'+
+          '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree">{{item.item|docName:item.implements:getDocument}}</span>'+
+        '</div>'+
+        '<doc-builder-tree ng-if="item.tree" schema="item.schema" ng-model="item.item" selected="selected"></doc-builder-tree>'+
+      '</md-menu-item>'+
+      /*'<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">'+
-            '<span ng-colors="::{background: \'primary\'}" layout-padding>{{$index+1}}</span>'+
-            '<span ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1">{{item}}</span>'+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-200-0.2\':\'background\'}" ng-click="select($index)">'+
+            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-400\':\'primary\'}">{{$index+1}}</span>'+
+            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == $index?\'primary-700\':\'grey-800\'}" ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1 && !schema.items[$index].objImplements">{{item}}</span>'+
+            '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1 && schema.items[$index].objImplements">{{item}}</md-button>'+
           '</div>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1" schema="schema.items[$index]" ng-model="item" selected="selected"></doc-builder-tree>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1 && !isEmpty(schema.items[$index])" schema="schema.items[$index]" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">'+
-            '<span ng-colors="::{background: \'primary\'}" layout-padding>{{$index+1}}</span>'+
-            '<span ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1">{{item}}</span>'+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-200-0.2\':\'background\'}" ng-click="select($index)">'+
+            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-400\':\'primary\'}">{{$index+1}}</span>'+
+            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == $index?\'primary-700\':\'grey-800\'}" ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1 && !schema.items.objImplements">{{item}}</span>'+
           '</div>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1" schema="schema.items" ng-model="item" selected="selected"></doc-builder-tree>'+
+          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1 && !isEmpty(schema.items[$index])" schema="schema.items" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-click="select($index)">'+
-            '<span ng-colors="::{background: \'primary\'}" layout-padding>{{$index+1}}</span>'+
-            '<span ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-200-0.2\':\'background\'}" ng-click="select($index)">'+
+            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-400\':\'primary\'}">{{$index+1}}</span>'+
+            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == $index?\'primary-700\':\'grey-800\'}" ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
           '</div>'+
           '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
       '</div>'+
-      '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objKey:\'!<\':\'obj\'" ng-if="key != \'objName\'">'+
+      '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objFilter:keyFilter" ng-if="key != \'objName\'">'+
         '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">'+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-200-0.2\':\'background\'}" ng-class="{\'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">'+
             '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-400\':\'primary\'}">{{key}}</span>'+
             '<span flex></span>'+
           '</div> '+
           '<doc-builder-tree schema="schema.properties[key]" ng-model="val" selected="selected"></doc-builder-tree>'+
         '</md-menu-item>'+
         '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)" layout="row">'+
+          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-200-0.2\':\'background\'}" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)" layout="row">'+
             '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-400\':\'primary\'}">{{key}}</span>'+
-            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == key&&\'primary-700\'}">{{val}}</span>'+
+            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == key?\'primary-700\':\'grey-800\'}">{{val}}</span>'+
           '</div>'+
         '</md-menu-item>'+
-      '</div>'+
+      '</div>'+*/
     '</md-list>';
 
   var tabTemplate =
-    '<doc-builder-tree flex layout="column" ng-if="!hideTab" schema="schema" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
+    '<doc-builder-tree flex layout="column" ng-if="!hideTab" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
     '<form ng-submit="doAction()" ng-if="edit && !hideTab" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding>'+
-        '<md-input-container class="schema-type" ng-disabled="selected.root||interface">'+
+        '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type" ng-change="typeChange()">'+
             '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
-        '<md-button type="submit" ng-disabled="">'+
+        '<md-button type="submit">'+
           'Agregar Item'+
         '</md-button>'+
         '<md-button ng-click="clear()">'+
           'Vaciar Conjunto'+
         '</md-button>'+
         '<span flex></span>'+
-        '<md-button ng-if="!selected.root" class="md-icon-button" ng-click="delete()">'+
+        '<md-button ng-if="!selected.root && !selectedSchema.required" class="md-icon-button" ng-click="delete()">'+
           '<md-icon md-font-set="material-icons">delete</md-icon>'+
         '</md-button>'+
       '</div>'+
       '<div layout="row" ng-switch-when="object" md-whiteframe="2" layout-padding>'+
-        '<md-input-container class="schema-type" ng-if="!selected.root">'+
+        '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type"  ng-change="typeChange()">'+
             '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
-        '<md-input-container>'+
+        '<md-input-container ng-if="!interface">'+
           '<label>Etiqueta</label>'+
           '<input ng-model="selected.new" required/>'+
         '</md-input-container>'+
-        '<md-button type="submit">'+
+        '<md-button type="submit" ng-if="!interface">'+
           'Agregar'+
         '</md-button>'+
-        '<md-button ng-click="clear()">'+
+        '<md-button ng-click="clear()" ng-if="!interface">'+
           'Vaciar Formulario'+
         '</md-button>'+
         '<span flex></span>'+
-        '<md-button  ng-if="!selected.root" class="md-icon-button" ng-click="delete()">'+
+        '<md-button  ng-if="!selected.root && !selectedSchema.required" class="md-icon-button" ng-click="delete()">'+
           '<md-icon md-font-set="material-icons">delete</md-icon>'+
         '</md-button>'+
       '</div>'+
       '<div layout="row" ng-switch-default md-whiteframe="2" layout-padding>'+
-        '<md-input-container class="schema-type" ng-if="!selected.root">'+
+        '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type"  ng-change="typeChange()">'+
             '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
-        '<md-input-container ng-if="selectedSchema.type!=\'boolean\'">'+
+        '<md-input-container ng-if="selectedSchema.type!=\'boolean\' && !selectedSchema.objImplements">'+
           '<label>Valor</label>'+
           '<input ng-model="selected.parent[selected.key]" type="{{selectedSchema.format==\'date-time\'?\'datetime\':selectedSchema.type}}"/>'+
         '</md-input-container>'+
-        '<md-checkbox ng-model="selected.parent[selected.key]" layout="row" layout-align="center center" ng-if="selectedSchema.type==\'boolean\'">'+
+        '<md-checkbox ng-model="selected.parent[selected.key]" layout="row" layout-align="center center" ng-if="selectedSchema.type==\'boolean\' && !selectedSchema.objImplements">'+
           '<div layout-fill>{{selected.key}}</div>'+
         '</md-checkbox>'+
+        '<md-button class="md-raised" ng-click="selectDocument($event)" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-if="selectedSchema.objImplements">Seleccionar Elemento</md-button>'+
         '<span flex></span>'+
-        '<md-button ng-if="!selected.root && (!selectedSchema.required || selectedSchema.required.indexOf(selected.key)===-1)" class="md-icon-button" ng-click="delete()">'+
+        '<md-button ng-if="!selected.root && !selectedSchema.required" class="md-icon-button" ng-click="delete()">'+
           '<md-icon md-font-set="material-icons">delete</md-icon>'+
         '</md-button>'+
       '</div>'+
@@ -143,15 +152,22 @@
       '</md-button>'+
     '</div>'+
     '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
-    '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces"></doc-builder-tab>';
+    '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>';
 
-  var dialogTemplate =
+  var interfaceDialogTemplate =
     '<md-dialog>'+
       '<md-dialog-content>'+
+        '<div layout="row" layout="column" layout-align="center center">'+
+          '<md-input-container>'+
+            '<label>Buscar</label>'+
+            '<md-icon md-font-set="material-icons">search</md-icon>'+
+            '<input ng-model="search"/>'+
+          '</md-input-container>'+
+        '</div>'+
         '<div layout="row" layout-wrap>'+
-          '<div class="interface" layout="column" layout-align="center center" flex="30" ng-repeat="interface in interfaces" ng-click="add(interface)">'+
-            '<md-icon md-font-set="material-icons">library_books</md-icon>'+
-            '{{interface.objName}}'+
+          '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in interfaces|filter:search" ng-click="add(interface)">'+
+            '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
+            '<div>{{interface.objName}}</div>'+
           '</div>'+
         '</div>'+
       '</md-dialog-content>'+
@@ -162,6 +178,36 @@
         '</md-button>'+
       '</md-dialog-actions>'+
     '</md-dialog>';
+
+    var documentDialogTemplate =
+      '<md-dialog>'+
+        '<md-dialog-content layout="column">'+
+          '<div layout="row" layout-align="center center">'+
+            '<md-input-container>'+
+              '<label>Buscar</label>'+
+              '<md-icon md-font-set="material-icons">search</md-icon>'+
+              '<input ng-model="search" ng-change="doSearch()"/>'+
+            '</md-input-container>'+
+          '</div>'+
+          '<div layout="row" layout-wrap>'+
+            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in documentList" ng-click="add(document)">'+
+              '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
+              '<div>{{document.objName}}</div>'+
+            '</div>'+
+          '</div>'+
+        '</md-dialog-content>'+
+        '<md-dialog-actions>'+
+          '<md-button ng-click="new()">'+
+            '<md-icon md-font-set="material-icons">add</md-icon>'+
+            '<span>nuevo</span>'+
+          '</md-button>'+
+          '<md-button ng-click="close()" class="md-primary">'+
+            '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '<span>cerrar</span>'+
+          '</md-button>'+
+        '</md-dialog-actions>'+
+      '</md-dialog>';
+
   var isEmpty = function(element) {
     var type = getType(element);
     if(type=='array') {
@@ -178,7 +224,7 @@
   };
 
   var buildSchema = function(element) {
-    if(angular.isUndefined(element)||element == null) return;
+    if(angular.isUndefined(element)||element === null) return;
     var schema = {};
     element.objName && (schema.title=element.objName);
     schema.type=getType(element);
@@ -233,38 +279,23 @@
   }
 
   angular.module('cendra.builder', [])
-  .filter('objKey', function() {
-    var filterFn = function(object, action, filterString) {
-      var deep = false, not = false, result = {}, origAction = action;
-      if(action.substr(0,1).toLowerCase() == 'd') {
-        deep = true;
-        action = action.substr(1);
+  .filter('objFilter', function() {
+    return function(obj, evalFn) {
+      var filtered={};
+      for(var i in obj) {
+        if(evalFn(obj[i], i, obj)) {
+          filtered[i]=obj[i];
+        }
       }
-      if(action.substr(0,1) == '!') {
-        not = true;
-        action = action.substr(1);
-      }
-      angular.forEach(object, function(value, key) {
-        if(key=='_id') return;
-        var add = false;
-        if(action == '=' && ((!not && key == filterString)||(not && key != filterString))) {
-          add = true;
-        }
-        if(action == '<' && ((!not && key.substr(0, filterString.length) == filterString)||(not && key.substr(0, filterString.length) != filterString))) {
-          add = true;
-        }
-        if(action == '>' && ((!not && key.substr(-filterString.length) == filterString)||(not && key.substr(-filterString.length) != filterString))) {
-          add = true;
-        }
-        if(add) {
-          if(deep) {
-            value = filterFn(value, origAction, filterString);
-          }
-          result[key] = value;
-        }
-      });
-      return result;
+      return filtered;
     };
+  })
+  .filter('docName', function() {
+    var filterFn = function(text, hasImplements, toNameFn) {
+      if(!text || !hasImplements) return text;
+      return toNameFn(text);
+    };
+    filterFn.$stateful=true;
     return filterFn;
   })
   .directive('docBuilder', function() {
@@ -275,9 +306,10 @@
         ngModel: '=',
         edit: '<?',
         done: '&',
+        search: '&?',
         interfaces: '=?'
       },
-      controller: function($scope, $mdToast, $mdDialog) {
+      controller: function($scope, $mdToast, $mdDialog, $filter) {
         if(!$scope.interfaces) $scope.interfaces=[];
         $scope.$watch('ngModel', function(value) {
           if(!value) {
@@ -290,10 +322,15 @@
           }
         });
 
+        $scope.$watchCollection('copy.objInterface', function(value) {
+          $scope.intNames = (value||[]).map(function(id) {
+            return $scope.getName(id).key;
+          });
+        });
+
         $scope.$watch('interfaces', function(value) {
-          value = value||[];
           $scope.map = {};
-          value.forEach(function(iface) {
+          (value||[]).forEach(function(iface) {
             $scope.map[iface._id] = iface;
           });
         });
@@ -372,7 +409,7 @@
 
         $scope.addInterface = function($event) {
           $mdDialog.show({
-            template: dialogTemplate,
+            template: interfaceDialogTemplate,
             targetEvent: $event,
             locals: {
               interfaces: $scope.interfaces
@@ -414,6 +451,28 @@
           };
         };
 
+        $scope.$on('docBuilder:search', function($event, filter, cb) {
+          $event.stopPropagation();
+          $scope.search({filter: filter})
+            .then(function(list) {
+              cb(null, list);
+            })
+            .catch(function(err) {
+              cb(err);
+            });
+        });
+
+        $scope.$on('docBuilder:getDocument', function($event, id, cb) {
+          $event.stopPropagation();
+          $scope.search({filter: id, one: true})
+            .then(function(doc) {
+              cb(null, doc);
+            })
+            .catch(function(err) {
+              cb(err);
+            });
+        });
+
       }
     };
   })
@@ -424,7 +483,8 @@
         ngModel: '=',
         interface: '=',
         interfaceList: '=',
-        edit: '<?'
+        edit: '<?',
+        intNames: "="
       },
       template: tabTemplate,
       compile: function() {
@@ -443,7 +503,7 @@
           }
         };
       },
-      controller: function($scope) {
+      controller: function($scope, $mdDialog) {
         if(!$scope.ngModel) $scope.ngModel = {};
         $scope.$watch('ngModel', function(value) {
           if($scope.interface) {
@@ -479,6 +539,36 @@
           }
           $scope.selected = value;
         });
+
+        $scope.selectDocument = function($event) {
+          var self = $scope;
+          $mdDialog.show({
+            template: documentDialogTemplate,
+            targetEvent: $event,
+            locals: {
+              interfaces: $scope.interfaceList
+            },
+            clickOutsideToClose: true,
+            controller: function($scope, $mdDialog, interfaces) {
+              $scope.interfaces = interfaces;
+              $scope.add = function(doc) {
+                $mdDialog.hide(doc);
+              };
+              $scope.doSearch = function() {
+                if(!$scope.search.length) return ($scope.documentList=[]);
+                var filter = {
+                  objName: {$regex: $scope.search, $options: 'i'}
+                };
+                self.$emit('docBuilder:search', filter, function(err, list) {
+                  $scope.documentList = list;
+                });
+              };
+            }
+          })
+          .then(function(doc) {
+            $scope.selected.parent[$scope.selected.key] = doc._id;
+          });
+        };
 
         $scope.types = {
           'array': 'Conjunto',
@@ -594,21 +684,81 @@
       scope: {
         schema:'=',
         ngModel: '=',
-        selected: '='
+        selected: '=',
+        intNames: "=?"
       },
-      controller: function($scope) {
+      controller: function($scope, $filter) {
         $scope.getType = getType;
         $scope.isEmpty = isEmpty;
 
         $scope.select = function(key) {
-          if(!$scope.schema) {
-            $scope.schema = {type: getType($scope.ngModel[key])};
-          }
           var element = {parent: $scope.ngModel, key: key, schema: $scope.schema};
           if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
             element = null;//{parent: null, key: null, schema: null};
           }
           $scope.$emit('docBuilder:select', element);
+        };
+
+        $scope.$watch('intNames', function(value) {
+          if(value) {
+            $scope.keyFilter = function(item, index, obj) {
+              if(index.match(/^obj/)||value.indexOf(index) !== -1) return false;
+              return true;
+            };
+          } else {
+            $scope.keyFilter = function() {
+              return true;
+            };
+          }
+        });
+
+        var createIterable = function() {
+          if(!$scope.schema && $scope.ngModel) $scope.schema = {type: getType($scope.ngModel)};
+          $scope.iteration = [];
+          switch($scope.schema.type) {
+            case 'array':
+              ($scope.ngModel||[]).forEach(function(item, i) {
+                var it = {key: i, label: i+1, item: item};
+                if($scope.schema.items) {
+                  switch(getType($scope.schema.items)) {
+                    case "array":
+                      if($scope.schema.items[i]) it.schema = $scope.schema.items[i];
+                      break;
+                    case "object":
+                      it.schema = $scope.schema.items;
+                  }
+                }
+                if(!it.schema) it.schema = {type: getType(item)};
+                it.tree= ['array', 'object'].indexOf(it.schema.type) !== -1;
+                it.implements = !!it.schema.objImplements;
+                $scope.iteration.push(it);
+              });
+              break;
+            case 'object':
+              for(var i in $filter('objFilter')($scope.ngModel, $scope.keyFilter)) {
+                (function(i, item) {
+                  var it = {key: i, label: i, item: item};
+                  it.schema = ($scope.schema.properties||{})[i]||{type: getType(item)};
+                  it.tree= ['array', 'object'].indexOf(it.schema.type) !== -1;
+                  it.implements = !!it.schema.objImplements;
+                  $scope.iteration.push(it);
+                })(i, $scope.ngModel[i]);
+              }
+              break;
+          }
+        };
+
+        $scope.$watchCollection('ngModel', createIterable);
+        $scope.$watchCollection('schema', createIterable);
+        var docData = {};
+        $scope.getDocument = function(id) {
+          if(!docData[id]) {
+            $scope.$emit('docBuilder:getDocument', id, function(err, doc) {
+              docData[id] = err?{objName: ''}:doc;
+            });
+            return 'Cargando..';
+          }
+          return docData[id].objName;
         };
       }
     };

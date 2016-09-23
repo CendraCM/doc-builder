@@ -10,45 +10,6 @@
         '</div>'+
         '<doc-builder-tree ng-if="item.tree" schema="item.schema" ng-model="item.item" selected="selected"></doc-builder-tree>'+
       '</md-menu-item>'+
-      /*'<div ng-switch-when="array" ng-repeat="item in ngModel track by $index">'+
-        '<md-menu-item layout="column" ng-if="getType(schema.items)==\'array\' && schema.items[$index]">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-200-0.2\':\'background\'}" ng-click="select($index)">'+
-            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-400\':\'primary\'}">{{$index+1}}</span>'+
-            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == $index?\'primary-700\':\'grey-800\'}" ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) === -1 && !schema.items[$index].objImplements">{{item}}</span>'+
-            '<md-button ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1 && schema.items[$index].objImplements">{{item}}</md-button>'+
-          '</div>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items[$index].type) !== -1 && !isEmpty(schema.items[$index])" schema="schema.items[$index]" ng-model="item" selected="selected"></doc-builder-tree>'+
-        '</md-menu-item>'+
-        '<md-menu-item layout="column" ng-if="getType(schema.items)==\'object\'">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-200-0.2\':\'background\'}" ng-click="select($index)">'+
-            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-400\':\'primary\'}">{{$index+1}}</span>'+
-            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == $index?\'primary-700\':\'grey-800\'}" ng-if="[\'array\', \'object\'].indexOf(schema.items.type) === -1 && !schema.items.objImplements">{{item}}</span>'+
-          '</div>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(schema.items.type) !== -1 && !isEmpty(schema.items[$index])" schema="schema.items" ng-model="item" selected="selected"></doc-builder-tree>'+
-        '</md-menu-item>'+
-        '<md-menu-item layout="column" ng-if="!schema.items || (getType(schema.items)!=\'object\' && !schema.items[$index])">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-200-0.2\':\'background\'}" ng-click="select($index)">'+
-            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == $index?\'primary-400\':\'primary\'}">{{$index+1}}</span>'+
-            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == $index?\'primary-700\':\'grey-800\'}" ng-if="[\'array\', \'object\'].indexOf(getType(item)) === -1">{{item}}</span>'+
-          '</div>'+
-          '<doc-builder-tree ng-if="[\'array\', \'object\'].indexOf(getType(item)) !== -1" ng-model="item" selected="selected"></doc-builder-tree>'+
-        '</md-menu-item>'+
-      '</div>'+
-      '<div ng-switch-when="object" ng-repeat="(key, val) in ngModel|objFilter:keyFilter" ng-if="key != \'objName\'">'+
-        '<md-menu-item layout="column" ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) !== -1">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-200-0.2\':\'background\'}" ng-class="{\'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}" ng-click="select(key)">'+
-            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-400\':\'primary\'}">{{key}}</span>'+
-            '<span flex></span>'+
-          '</div> '+
-          '<doc-builder-tree schema="schema.properties[key]" ng-model="val" selected="selected"></doc-builder-tree>'+
-        '</md-menu-item>'+
-        '<md-menu-item ng-if="[\'array\', \'object\'].indexOf((schema.properties[key] && schema.properties[key].type)||getType(val)) === -1">'+
-          '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-200-0.2\':\'background\'}" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == key, \'md-warn\': dirty && (schema.required && schema.required.indexOf(key)!==-1) && isEmpty(val)}"   ng-click="select(key)" layout="row">'+
-            '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == key?\'primary-400\':\'primary\'}">{{key}}</span>'+
-            '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == key?\'primary-700\':\'grey-800\'}">{{val}}</span>'+
-          '</div>'+
-        '</md-menu-item>'+
-      '</div>'+*/
     '</md-list>';
 
   var tabTemplate =
@@ -58,7 +19,10 @@
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type" ng-change="typeChange()">'+
-            '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
+            '<md-option ng-repeat="(key, val) in types" ng-value="key">'+
+              '<md-icon md-font-set="material-icons">{{val.icon}}</md-icon>'+
+              '<span>{{val.desc}}</span>'+
+            '</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
         '<md-button type="submit">'+
@@ -76,7 +40,10 @@
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type"  ng-change="typeChange()">'+
-            '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
+            '<md-option ng-repeat="(key, val) in types" ng-value="key">'+
+              '<md-icon md-font-set="material-icons">{{val.icon}}</md-icon>'+
+              '<span>{{val.desc}}</span>'+
+            '</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
         '<md-input-container ng-if="!interface">'+
@@ -98,7 +65,10 @@
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type"  ng-change="typeChange()">'+
-            '<md-option ng-repeat="(key, val) in types" ng-value="key">{{val}}</md-option>'+
+            '<md-option ng-repeat="(key, val) in types" ng-value="key">'+
+              '<md-icon md-font-set="material-icons">{{val.icon}}</md-icon>'+
+              '<span>{{val.desc}}</span>'+
+            '</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
         '<md-input-container ng-if="selectedSchema.type!=\'boolean\' && !selectedSchema.objImplements">'+
@@ -571,12 +541,12 @@
         };
 
         $scope.types = {
-          'array': 'Conjunto',
-          'date': 'Fecha/Hora',
-          'object': 'Formulario',
-          'number': 'Número',
-          'string': 'Texto',
-          'boolean': 'Verdadero/Falso'
+          'array': {desc: 'Conjunto', icon: 'format_list_numbered'},
+          'date': {desc: 'Fecha/Hora', icon: 'date_range'},
+          'object': {desc: 'Formulario', icon: 'view_list'},
+          'number': {desc: 'Número', icon: 'plus_one'},
+          'string': {desc: 'Texto', icon: 'text_fields'},
+          'boolean': {desc: 'Verdadero/Falso', icon: 'done'}
         };
 
         $scope.doAction = function() {

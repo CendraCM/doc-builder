@@ -53,3 +53,7 @@ doc-builder schema-list.ng-enter {
 .interface md-icon {
   color: white;
 }
+
+doc-builder .lvl {
+  font-weight: bold;
+}

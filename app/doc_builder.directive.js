@@ -4,7 +4,7 @@
   var treeTemplate =
     '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
-        '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)">'+
+        '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)" ng-dblclick="select(item.key, true)">'+
           '<md-icon md-font-set="material-icons">{{types[item.schema.type].icon}}</md-icon>'+
           '<span class="lbl" layout-padding>{{item.label}}</span>'+
           '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree">{{item.item|docName:item.implements:getDocument}}</span>'+
@@ -79,7 +79,8 @@
         '<md-checkbox ng-model="selected.parent[selected.key]" layout="row" layout-align="center center" ng-if="selectedSchema.type==\'boolean\' && !selectedSchema.objImplements">'+
           '<div layout-fill>{{selected.key}}</div>'+
         '</md-checkbox>'+
-        '<md-button class="md-raised" ng-click="selectDocument($event)" ng-class="{\'md-primary\': selected.parent == ngModel && selected.key == $index}" ng-if="selectedSchema.objImplements">Seleccionar Elemento</md-button>'+
+        '<md-button class="md-raised" ng-click="editDocument($event)" ng-if="selectedSchema.objImplements && selected.parent[selected.key]">Editar Documento</md-button>'+
+        '<md-button class="md-raised" ng-click="selectDocument($event)" ng-if="selectedSchema.objImplements">{{selected.parent[selected.key]?\'Cambiar\':\'Seleccionar\'}} Documento</md-button>'+
         '<span flex></span>'+
         '<md-button ng-if="!selected.root && !selectedSchema.required" class="md-icon-button" ng-click="delete()">'+
           '<md-icon md-font-set="material-icons">delete</md-icon>'+
@@ -89,8 +90,8 @@
 
   var template=
     '<form name="mainForm" ng-if="!isChild" md-whiteframe="2" layout-padding>'+
-      '<div layout="row">'+
-        '<div layout="column">'+
+      '<div layout="row" layout-align="start center">'+
+        /*'<div layout="column">'+
           '<md-input-container>'+
             '<label>Titulo Documento</label>'+
             '<input ng-model="copy.objName" name="documentName" required/>'+
@@ -99,17 +100,22 @@
             '<label>Descripci&oacute;n</label>'+
             '<input ng-model="copy.objDescription" name="documentDescription"/>'+
           '</md-input-container>'+
+        '</div>'+*/
+        '<div ng-repeat="level in stack" layout="row" layout-align="start center">'+
+          '<div class="lvl">{{level.copy.objName}}</div>'+
+          '<md-icon md-font-set="material-icons">chevron_right</md-icon>'+
         '</div>'+
-        '<md-button class="md-icon-button" ng-click="editMetadata=!editMetadata">'+
-          '<md-icon md-font-set="material-icons">edit</md-icon>'+
-        '</md-button>'+
+        '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
         '<span flex></span>'+
         '{{copy}}'+
         '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
-          '<md-icon md-font-set="material-icons">save</md-icon>'+
+          '<md-icon md-font-set="material-icons">{{stack.length?\'done_all\':\'done\'}}</md-icon>'+
         '</md-button>'+
         '<md-button class="md-icon-button" ng-click="doCancel()">'+
-          '<md-icon md-font-set="material-icons">cancel</md-icon>'+
+          '<md-icon md-font-set="material-icons">{{stack.length?\'arrow_back\':\'clear\'}}</md-icon>'+
+        '</md-button>'+
+        '<md-button class="md-icon-button" ng-click="editMetadata=!editMetadata">'+
+          '<md-icon md-font-set="material-icons">settings</md-icon>'+
         '</md-button>'+
       '</div>'+
     '</form>'+
@@ -282,9 +288,10 @@
       },
       controller: function($scope, $mdToast, $mdDialog, $filter) {
         if(!$scope.interfaces) $scope.interfaces=[];
+        $scope.stack = [];
         $scope.$watch('ngModel', function(value) {
           if(!value) {
-            $scope.copy = {objName: ''};
+            $scope.copy = {objName: 'Sin Título'};
           } else {
             $scope.copy = angular.merge({}, value);
           }
@@ -363,19 +370,32 @@
             return $mdToast.showSimple('El documento no puede estar vacío.');
           }
           var error;
-          if((error = failConstraints($scope.copy, $scope.schema))) {
-            $scope.dirty = true;
-            return $mdToast.showSimple(error);
+          $scope.copy.objInterface.forEach(function(interfaceId) {
+            if(error) return;
+            if((error = failConstraints($scope.copy[$scope.getName(interfaceId).key], $scope.map[interfaceId]))) {
+              $scope.selectInterface(interfaceId);
+              $scope.dirty = true;
+              return $mdToast.showSimple(error);
+            }
+          });
+          if(error) return;
+          if(!$scope.stack.length) {
+            for(var i in $scope.ngModel) {
+              delete $scope.ngModel[i];
+            }
+            angular.copy($scope.copy, $scope.ngModel);
+            $scope.done({canceled: false});
+          } else {
+            $scope.done({canceled: false, doc: $scope.copy})
+            .then(function(doc) {
+              $scope.$emit('docBuilder:backStack', doc._id);
+            });
           }
-          for(var i in $scope.ngModel) {
-            delete $scope.ngModel[i];
-          }
-          angular.copy($scope.copy, $scope.ngModel);
-          $scope.done({canceled: false});
         };
 
         $scope.doCancel = function() {
-          $scope.done({canceled: true});
+          if(!$scope.stack.length) return $scope.done({canceled: true});
+          $scope.$emit('docBuilder:backStack');
         };
 
         $scope.addInterface = function($event) {
@@ -390,6 +410,9 @@
               $scope.interfaces = interfaces;
               $scope.add = function(iface) {
                 $mdDialog.hide(iface);
+              };
+              $scope.close = function() {
+                $mdDialog.cancel();
               };
             }
           })
@@ -444,6 +467,23 @@
             });
         });
 
+        $scope.$on('docBuilder:addStack', function($event, selected, model) {
+          $scope.stack.push({copy: $scope.copy, selectedInterface: $scope.selectedInterface, selected: selected});
+          $scope.selectedInterface = null;
+          $scope.copy = model;
+        });
+
+        $scope.$on('docBuilder:backStack', function($event, value) {
+          if(!$scope.stack.length) return;
+          var level = $scope.stack.pop();
+          $scope.copy = level.copy;
+          $scope.selectedInterface = level.selectedInterface;
+          if(value) {
+            level.selected.parent[level.selected.key] = value;
+          }
+          $scope.$broadcast('docBuilder:select', level.selected);
+        });
+
       }
     };
   })
@@ -487,8 +527,8 @@
           if(!$scope.selected) $scope.$emit('docBuilder:select', null);
         });
 
-        $scope.$on('docBuilder:select', function($event, value) {
-          $event.stopPropagation();
+        $scope.$on('docBuilder:select', function($event, value, dblck) {
+          if($event.stopPropagation) $event.stopPropagation();
           if(!value) {
             value = {root: $scope.ngModel};
           }
@@ -509,6 +549,11 @@
             $scope.memo = angular.merge({}, {selectedSchema: $scope.selectedSchema, value: value.parent[value.key]});
           }
           $scope.selected = value;
+          if(dblck) {
+            if($scope.selectedSchema.objImplements) {
+              $scope.editDocument();
+            }
+          }
         });
 
         $scope.selectDocument = function($event) {
@@ -525,6 +570,12 @@
               $scope.add = function(doc) {
                 $mdDialog.hide(doc);
               };
+              $scope.new = function(doc) {
+                $mdDialog.hide();
+              };
+              $scope.close = function() {
+                $mdDialog.cancel();
+              };
               $scope.doSearch = function() {
                 if(!$scope.search.length) return ($scope.documentList=[]);
                 var filter = {
@@ -537,7 +588,14 @@
             }
           })
           .then(function(doc) {
-            $scope.selected.parent[$scope.selected.key] = doc._id;
+            if(doc) return ($scope.selected.parent[$scope.selected.key] = doc._id);
+            $scope.$emit('docBuilder:addStack', $scope.selected, {objName: 'Sin Título'});
+          });
+        };
+
+        $scope.editDocument = function() {
+          $scope.$emit('docBuilder:getDocument', $scope.selected.parent[$scope.selected.key], function(err, doc) {
+            $scope.$emit('docBuilder:addStack', $scope.selected, doc);
           });
         };
 
@@ -663,12 +721,12 @@
         $scope.getType = getType;
         $scope.isEmpty = isEmpty;
 
-        $scope.select = function(key) {
+        $scope.select = function(key, dblck) {
           var element = {parent: $scope.ngModel, key: key, schema: $scope.schema};
-          if($scope.selected.parent == element.parent && $scope.selected.key == element.key) {
+          if(!dblck && $scope.selected.parent == element.parent && $scope.selected.key == element.key) {
             element = null;//{parent: null, key: null, schema: null};
           }
-          $scope.$emit('docBuilder:select', element);
+          $scope.$emit('docBuilder:select', element, dblck);
         };
 
         $scope.$watch('intNames', function(value) {

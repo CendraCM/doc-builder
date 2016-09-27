@@ -4,16 +4,17 @@
   var treeTemplate =
     '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
-        '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)">'+
-          '<span class="md-whiteframe-1dp lbl" layout-padding flex="20" md-colors="{background: selected.parent == ngModel && selected.key == item.key?\'primary-400\':\'primary\'}">{{item.label}}</span>'+
+        '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)">'+
+          '<md-icon md-font-set="material-icons">{{types[item.schema.type].icon}}</md-icon>'+
+          '<span class="lbl" layout-padding>{{item.label}}</span>'+
           '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree">{{item.item|docName:item.implements:getDocument}}</span>'+
         '</div>'+
-        '<doc-builder-tree ng-if="item.tree" schema="item.schema" ng-model="item.item" selected="selected"></doc-builder-tree>'+
+        '<doc-builder-tree types="types" ng-if="item.tree" schema="item.schema" ng-model="item.item" selected="selected"></doc-builder-tree>'+
       '</md-menu-item>'+
     '</md-list>';
 
   var tabTemplate =
-    '<doc-builder-tree flex layout="column" ng-if="!hideTab" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
+    '<doc-builder-tree flex layout="column" types="types" ng-if="!hideTab" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected"></doc-builder-tree>'+
     '<form ng-submit="doAction()" ng-if="edit && !hideTab" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding>'+
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
@@ -655,7 +656,8 @@
         schema:'=',
         ngModel: '=',
         selected: '=',
-        intNames: "=?"
+        intNames: "=?",
+        types: "<"
       },
       controller: function($scope, $filter) {
         $scope.getType = getType;

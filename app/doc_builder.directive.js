@@ -5,9 +5,10 @@
     '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
         '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)" ng-dblclick="select(item.key, true)">'+
-          '<md-icon md-font-set="material-icons">{{types[item.schema.type].icon}}</md-icon>'+
-          '<span class="lbl" layout-padding>{{item.label}}</span>'+
+          '<span class="lbl" layout-padding>{{item.label}}:</span>'+
+          '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item.schema.type].icon}}</md-icon>'+
           '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree">{{item.item|docName:item.implements:getDocument}}</span>'+
+          '<span flex ng-if="item.tree"></span>'+
         '</div>'+
         '<doc-builder-tree types="types" ng-if="item.tree" schema="item.schema" ng-model="item.item" selected="selected"></doc-builder-tree>'+
       '</md-menu-item>'+
@@ -91,16 +92,6 @@
   var template=
     '<form name="mainForm" ng-if="!isChild" md-whiteframe="2" layout-padding>'+
       '<div layout="row" layout-align="start center">'+
-        /*'<div layout="column">'+
-          '<md-input-container>'+
-            '<label>Titulo Documento</label>'+
-            '<input ng-model="copy.objName" name="documentName" required/>'+
-          '</md-input-container>'+
-          '<md-input-container ng-show="editMetadata">'+
-            '<label>Descripci&oacute;n</label>'+
-            '<input ng-model="copy.objDescription" name="documentDescription"/>'+
-          '</md-input-container>'+
-        '</div>'+*/
         '<div ng-repeat="level in stack" layout="row" layout-align="start center">'+
           '<div class="lvl">{{level.copy.objName}}</div>'+
           '<md-icon md-font-set="material-icons">chevron_right</md-icon>'+
@@ -290,11 +281,7 @@
         if(!$scope.interfaces) $scope.interfaces=[];
         $scope.stack = [];
         $scope.$watch('ngModel', function(value) {
-          if(!value) {
-            $scope.copy = {objName: 'Sin Título'};
-          } else {
-            $scope.copy = angular.merge({}, value);
-          }
+          $scope.copy = angular.merge({objName: 'Sin Título'}, value);
           if(!$scope.selectedModel) {
             $scope.selectedModel = $scope.copy;
           }
@@ -361,8 +348,8 @@
         };
 
         $scope.doSave = function(mainForm) {
-          mainForm.documentName.$setDirty();
-          mainForm.documentName.$setTouched();
+/*          mainForm.documentName.$setDirty();
+          mainForm.documentName.$setTouched();*/
           if(isEmpty($scope.copy.objName)) {
             return $mdToast.showSimple('Debe Proporcionar un Nombre para el Documento.');
           }
@@ -370,7 +357,7 @@
             return $mdToast.showSimple('El documento no puede estar vacío.');
           }
           var error;
-          $scope.copy.objInterface.forEach(function(interfaceId) {
+          $scope.copy.objInterface && $scope.copy.objInterface.forEach(function(interfaceId) {
             if(error) return;
             if((error = failConstraints($scope.copy[$scope.getName(interfaceId).key], $scope.map[interfaceId]))) {
               $scope.selectInterface(interfaceId);
@@ -469,8 +456,8 @@
 
         $scope.$on('docBuilder:addStack', function($event, selected, model) {
           $scope.stack.push({copy: $scope.copy, selectedInterface: $scope.selectedInterface, selected: selected});
-          $scope.selectedInterface = null;
           $scope.copy = model;
+          $scope.selectedInterface = model.objInterface&&model.objInterface[0]||null;
         });
 
         $scope.$on('docBuilder:backStack', function($event, value) {
@@ -605,7 +592,7 @@
           'object': {desc: 'Formulario', icon: 'view_list'},
           'number': {desc: 'Número', icon: 'plus_one'},
           'string': {desc: 'Texto', icon: 'text_fields'},
-          'boolean': {desc: 'Verdadero/Falso', icon: 'done'}
+          'boolean': {desc: 'Verdadero/Falso', icon: 'indeterminate_check_box'}
         };
 
         $scope.doAction = function() {

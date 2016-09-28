@@ -4,10 +4,11 @@
   var treeTemplate =
     '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
+        //'{{item}}'+
         '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)" ng-dblclick="select(item.key, true)">'+
           '<span class="lbl" layout-padding>{{item.label}}:</span>'+
           '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item.schema.type].icon}}</md-icon>'+
-          '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree">{{item.item|docName:item.implements:getDocument}}</span>'+
+          '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree">{{(item.item.toISOString?item.item.toISOString():item.item)|docName:item.implements:getDocument}}</span>'+
           '<span flex ng-if="item.tree"></span>'+
         '</div>'+
         '<doc-builder-tree types="types" ng-if="item.tree" schema="item.schema" ng-model="item.item" selected="selected"></doc-builder-tree>'+
@@ -21,9 +22,9 @@
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type" ng-change="typeChange()">'+
-            '<md-option ng-repeat="(key, val) in types" ng-value="key">'+
+            '<md-option ng-repeat="(key, val) in types" ng-value="key" layout="row" layout-align="start center">'+
               '<md-icon md-font-set="material-icons">{{val.icon}}</md-icon>'+
-              '<span>{{val.desc}}</span>'+
+              '<span flex layout-padding>{{val.desc}}</span>'+
             '</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
@@ -42,9 +43,9 @@
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type"  ng-change="typeChange()">'+
-            '<md-option ng-repeat="(key, val) in types" ng-value="key">'+
+            '<md-option ng-repeat="(key, val) in types" ng-value="key" layout="row" layout-align="start center">'+
               '<md-icon md-font-set="material-icons">{{val.icon}}</md-icon>'+
-              '<span>{{val.desc}}</span>'+
+              '<span flex layout-padding>{{val.desc}}</span>'+
             '</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
@@ -67,9 +68,9 @@
         '<md-input-container class="schema-type" ng-if="!selected.root&&!interface">'+
           '<label>Tipo Elemento</label>'+
           '<md-select ng-model="selectedSchema.type"  ng-change="typeChange()">'+
-            '<md-option ng-repeat="(key, val) in types" ng-value="key">'+
+            '<md-option ng-repeat="(key, val) in types" ng-value="key" layout="row" layout-align="start center">'+
               '<md-icon md-font-set="material-icons">{{val.icon}}</md-icon>'+
-              '<span>{{val.desc}}</span>'+
+              '<span flex layout-padding>{{val.desc}}</span>'+
             '</md-option>'+
           '</md-select>'+
         '</md-input-container>'+
@@ -98,15 +99,18 @@
         '</div>'+
         '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
         '<span flex></span>'+
-        '{{copy}}'+
+        //'{{copy}}'+
         '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
           '<md-icon md-font-set="material-icons">{{stack.length?\'done_all\':\'done\'}}</md-icon>'+
         '</md-button>'+
         '<md-button class="md-icon-button" ng-click="doCancel()">'+
           '<md-icon md-font-set="material-icons">{{stack.length?\'arrow_back\':\'clear\'}}</md-icon>'+
         '</md-button>'+
-        '<md-button class="md-icon-button" ng-click="editMetadata=!editMetadata">'+
-          '<md-icon md-font-set="material-icons">settings</md-icon>'+
+        '<md-button class="md-icon-button" ng-click="editMetadata()">'+
+          '<md-icon md-font-set="material-icons">edit</md-icon>'+
+        '</md-button>'+
+        '<md-button class="md-icon-button" ng-click="editSecurity()">'+
+          '<md-icon md-font-set="material-icons">security</md-icon>'+
         '</md-button>'+
       '</div>'+
     '</form>'+
@@ -719,7 +723,7 @@
         $scope.$watch('intNames', function(value) {
           if(value) {
             $scope.keyFilter = function(item, index, obj) {
-              if(index.match(/^obj/)||value.indexOf(index) !== -1) return false;
+              if(index=='_id'||index.match(/^obj/)||value.indexOf(index) !== -1) return false;
               return true;
             };
           } else {

@@ -119,8 +119,8 @@
       '<md-button ng-click="selectInterface()" ng-class="{\'md-primary\': !selectedInterface}">'+
         'base'+
       '</md-button>'+
-      '<md-button class="md-icon-button" ng-if="interfaces.length" ng-click="addInterface($event)">'+
-        '<md-icon md-font-set="material-icons">add</md-icon>'+
+      '<md-button class="md-icon-button" ng-if="implementable.length" ng-click="addInterface($event)">'+
+        '<md-icon md-font-set="material-icons">library_add</md-icon>'+
       '</md-button>'+
     '</div>'+
     '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
@@ -279,7 +279,8 @@
         edit: '<?',
         done: '&',
         search: '&?',
-        interfaces: '=?'
+        interfaces: '=?',
+        implementable: '=?'
       },
       controller: function($scope, $mdToast, $mdDialog, $filter) {
         if(!$scope.interfaces) $scope.interfaces=[];
@@ -394,7 +395,7 @@
             template: interfaceDialogTemplate,
             targetEvent: $event,
             locals: {
-              interfaces: $scope.interfaces
+              interfaces: $scope.implementable
             },
             clickOutsideToClose: true,
             controller: function($scope, $mdDialog, interfaces) {
@@ -515,7 +516,7 @@
             $scope.schema = buildSchema(value);
           }
           if(!$scope.schema) $scope.schema = {type: 'object'};
-          if(!$scope.selected) $scope.$emit('docBuilder:select', null);
+          if(!$scope.selected) $scope.$emit('docBuilder:select', (value.objInterface&&value.objInterface.length&&value.objInterface[0])||null);
         });
 
         $scope.$on('docBuilder:select', function($event, value, dblck) {
@@ -769,7 +770,11 @@
           }
         };
 
-        $scope.$watchCollection('ngModel', createIterable);
+        $scope.$watchCollection('ngModel', function(value, prev) {
+          console.log('v: %j',value);
+          console.log('p: %j',prev);
+          createIterable(value);
+        });
         $scope.$watchCollection('schema', createIterable);
         var docData = {};
         $scope.getDocument = function(id) {

@@ -106,7 +106,7 @@
         '<md-button class="md-icon-button" ng-click="doCancel()">'+
           '<md-icon md-font-set="material-icons">{{stack.length?\'arrow_back\':\'clear\'}}</md-icon>'+
         '</md-button>'+
-        '<md-button class="md-icon-button" ng-click="editMetadata()">'+
+        '<md-button class="md-icon-button" ng-click="editMetadata($event)">'+
           '<md-icon md-font-set="material-icons">edit</md-icon>'+
         '</md-button>'+
         '<md-button class="md-icon-button" ng-click="editSecurity()">'+
@@ -128,57 +128,114 @@
 
   var interfaceDialogTemplate =
     '<md-dialog>'+
-      '<md-dialog-content>'+
-        '<div layout="row" layout="column" layout-align="center center">'+
-          '<md-input-container>'+
-            '<label>Buscar</label>'+
-            '<md-icon md-font-set="material-icons">search</md-icon>'+
-            '<input ng-model="search"/>'+
-          '</md-input-container>'+
-        '</div>'+
-        '<div layout="row" layout-wrap>'+
-          '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in interfaces|filter:search" ng-click="add(interface)">'+
-            '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
-            '<div>{{interface.objName}}</div>'+
+      '<form>'+
+        '<md-toolbar>'+
+          '<div class="md-toolbar-tools">'+
+          '<h2 class="md-title">Agregar Tipo Documental</h2>'+
           '</div>'+
-        '</div>'+
-      '</md-dialog-content>'+
-      '<md-dialog-actions>'+
-        '<md-button ng-click="close()" class="md-primary">'+
-          '<md-icon md-font-set="material-icons">close</md-icon>'+
-          '<span>cerrar</span>'+
-        '</md-button>'+
-      '</md-dialog-actions>'+
-    '</md-dialog>';
-
-    var documentDialogTemplate =
-      '<md-dialog>'+
-        '<md-dialog-content layout="column">'+
-          '<div layout="row" layout-align="center center">'+
+        '</md-toolbar>'+
+        '<md-dialog-content layout="column" layout-padding>'+
+          '<div layout="row" layout="column" layout-padding layout-align="center center">'+
             '<md-input-container>'+
               '<label>Buscar</label>'+
               '<md-icon md-font-set="material-icons">search</md-icon>'+
-              '<input ng-model="search" ng-change="doSearch()"/>'+
+              '<input ng-model="search"/>'+
             '</md-input-container>'+
           '</div>'+
           '<div layout="row" layout-wrap>'+
-            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in documentList" ng-click="add(document)">'+
-              '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
-              '<div>{{document.objName}}</div>'+
+            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in interfaces|filter:search" ng-click="add(interface)">'+
+              '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
+              '<div>{{interface.objName}}</div>'+
             '</div>'+
           '</div>'+
         '</md-dialog-content>'+
         '<md-dialog-actions>'+
-          '<md-button ng-click="new()">'+
-            '<md-icon md-font-set="material-icons">add</md-icon>'+
-            '<span>nuevo</span>'+
-          '</md-button>'+
           '<md-button ng-click="close()" class="md-primary">'+
             '<md-icon md-font-set="material-icons">close</md-icon>'+
             '<span>cerrar</span>'+
           '</md-button>'+
         '</md-dialog-actions>'+
+      '</form>'+
+    '</md-dialog>';
+
+    var documentDialogTemplate =
+      '<md-dialog>'+
+        '<form>'+
+          '<md-toolbar>'+
+            '<div class="md-toolbar-tools">'+
+              '<h2 class="md-title">Elegir Documento</h2>'+
+            '</div>'+
+          '</md-toolbar>'+
+          '<md-dialog-content layout="column" layout-padding>'+
+            '<div layout="row" layout-align="center center">'+
+              '<md-input-container>'+
+                '<label>Buscar</label>'+
+                '<md-icon md-font-set="material-icons">search</md-icon>'+
+                '<input ng-model="search" ng-change="doSearch()"/>'+
+              '</md-input-container>'+
+            '</div>'+
+            '<div layout="row" layout-wrap>'+
+              '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in documentList" ng-click="add(document)">'+
+                '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
+                '<div>{{document.objName}}</div>'+
+              '</div>'+
+            '</div>'+
+          '</md-dialog-content>'+
+          '<md-dialog-actions>'+
+            '<md-button ng-click="new()">'+
+              '<md-icon md-font-set="material-icons">add</md-icon>'+
+              '<span>nuevo</span>'+
+            '</md-button>'+
+            '<md-button ng-click="close()">'+
+              '<md-icon md-font-set="material-icons">close</md-icon>'+
+              '<span>cerrar</span>'+
+            '</md-button>'+
+          '</md-dialog-actions>'+
+        '</form>'+
       '</md-dialog>';
+
+      var metadataDialogTemplate =
+        '<md-dialog>'+
+          '<form>'+
+            '<md-toolbar>'+
+              '<div class="md-toolbar-tools">'+
+                '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
+              '</div>'+
+            '</md-toolbar>'+
+            '<md-dialog-content layout="row" layout-padding>'+
+              '<div layout="column" layout-padding>'+
+                '<md-input-container>'+
+                  '<label>Título</label>'+
+                  '<input ng-model="model.objName" ng-change="doSearch()"/>'+
+                '</md-input-container>'+
+                '<md-input-container>'+
+                  '<label>Descripción</label>'+
+                  '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
+                '</md-input-container>'+
+              '</div>'+
+              '<div layout="column" layout-padding>'+
+                '<md-input-container>'+
+                  '<label>Tags</label>'+
+                  '<input ng-model="model.objTags" ng-change="doSearch()"/>'+
+                '</md-input-container>'+
+                '<md-input-container>'+
+                  '<label>Tipos Documentales</label>'+
+                  '<input ng-model="model.objInterface" ng-change="doSearch()"/>'+
+                '</md-input-container>'+
+              '</div>'+
+            '</md-dialog-content>'+
+            '<md-dialog-actions>'+
+              '<md-button ng-click="close()">'+
+                '<md-icon md-font-set="material-icons">close</md-icon>'+
+                '<span>cerrar</span>'+
+              '</md-button>'+
+              '<md-button ng-click="save()" class="md-primary">'+
+                '<md-icon md-font-set="material-icons">done</md-icon>'+
+                '<span>Guardar</span>'+
+              '</md-button>'+
+            '</md-dialog-actions>'+
+          '</form>'+
+        '</md-dialog>';
 
   var isEmpty = function(element) {
     var type = getType(element);
@@ -414,6 +471,29 @@
             $scope.selectInterface(iface._id);
           });
         };
+
+        $scope.editMetadata = function($event) {
+          $mdDialog.show({
+            template: metadataDialogTemplate,
+            targetEvent: $event,
+            locals: {
+              model: $scope.copy
+            },
+            clickOutsideToClose: true,
+            controller: function($scope, $mdDialog, model) {
+              $scope.model = model;
+              $scope.save = function(model) {
+                $mdDialog.hide(model);
+              };
+              $scope.close = function() {
+                $mdDialog.cancel();
+              };
+            }
+          })
+          .then(function(iface) {
+
+          });
+        }
 
         $scope.selectInterface = function(iface) {
           $scope.selectedInterface = iface;

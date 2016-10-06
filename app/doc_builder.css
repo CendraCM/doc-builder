@@ -21,6 +21,10 @@ doc-builder {
   flex-direction: column;
 }
 
+.inline-block {
+  display: inline-block;
+}
+
 doc-builder-tab > doc-builder-tree > md-list {
   overflow: auto;
 }

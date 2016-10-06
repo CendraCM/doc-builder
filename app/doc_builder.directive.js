@@ -92,26 +92,29 @@
 
   var template=
     '<form name="mainForm" ng-if="!isChild" md-whiteframe="2" layout-padding>'+
-      '<div layout="row" layout-align="start center">'+
-        '<div ng-repeat="level in stack" layout="row" layout-align="start center">'+
-          '<div class="lvl">{{level.copy.objName}}</div>'+
-          '<md-icon md-font-set="material-icons">chevron_right</md-icon>'+
+      '<div layout="column" layout-align="center stretch" flex layout-padding>'+
+        '<div layout="row" flex layout-align="start center">'+
+          '<div ng-repeat="level in stack" layout="row" layout-align="start center">'+
+            '<div class="lvl">{{level.copy.objName}}</div>'+
+            '<md-icon md-font-set="material-icons">chevron_right</md-icon>'+
+          '</div>'+
+          '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
+          '<span flex></span>'+
+          //'{{copy}}'+
+          '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
+            '<md-icon md-font-set="material-icons">{{stack.length?\'done_all\':\'done\'}}</md-icon>'+
+          '</md-button>'+
+          '<md-button class="md-icon-button" ng-click="doCancel()">'+
+            '<md-icon md-font-set="material-icons">{{stack.length?\'arrow_back\':\'clear\'}}</md-icon>'+
+          '</md-button>'+
+          '<md-button class="md-icon-button" ng-click="editMetadata($event)">'+
+            '<md-icon md-font-set="material-icons">edit</md-icon>'+
+          '</md-button>'+
+          '<md-button class="md-icon-button" ng-click="editSecurity($event)">'+
+            '<md-icon md-font-set="material-icons">security</md-icon>'+
+          '</md-button>'+
         '</div>'+
-        '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
-        '<span flex></span>'+
-        //'{{copy}}'+
-        '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
-          '<md-icon md-font-set="material-icons">{{stack.length?\'done_all\':\'done\'}}</md-icon>'+
-        '</md-button>'+
-        '<md-button class="md-icon-button" ng-click="doCancel()">'+
-          '<md-icon md-font-set="material-icons">{{stack.length?\'arrow_back\':\'clear\'}}</md-icon>'+
-        '</md-button>'+
-        '<md-button class="md-icon-button" ng-click="editMetadata($event)">'+
-          '<md-icon md-font-set="material-icons">edit</md-icon>'+
-        '</md-button>'+
-        '<md-button class="md-icon-button" ng-click="editSecurity()">'+
-          '<md-icon md-font-set="material-icons">security</md-icon>'+
-        '</md-button>'+
+        '<div class="md-caption" flex>{{copy.objDescription}}</div>'+
       '</div>'+
     '</form>'+
     '<div layout="row">'+
@@ -122,6 +125,11 @@
       '<md-button class="md-icon-button" ng-if="implementable.length" ng-click="addInterface($event)">'+
         '<md-icon md-font-set="material-icons">library_add</md-icon>'+
       '</md-button>'+
+      '<span flex></span>'+
+      '<md-chips>'+
+        '<md-chip ng-repeat="tag in copy.objTags" ng-if="$index <= 4">{{tag}}</md-chip>'+
+      '</md-chips>'+
+      '<div layout="column" layout-align="end center"><md-icon md-font-set="material-icons" ng-if="copy.objTags && copy.objTags.length > 5">more_horiz</md-icon></div>'+
     '</div>'+
     '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
     '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>';
@@ -202,27 +210,69 @@
                 '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
               '</div>'+
             '</md-toolbar>'+
-            '<md-dialog-content layout="row" layout-padding>'+
-              '<div layout="column" layout-padding>'+
-                '<md-input-container>'+
-                  '<label>Título</label>'+
-                  '<input ng-model="model.objName" ng-change="doSearch()"/>'+
-                '</md-input-container>'+
-                '<md-input-container>'+
-                  '<label>Descripción</label>'+
-                  '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
-                '</md-input-container>'+
+            '<md-dialog-content layout="column" layout-padding>'+
+              '<div class="inline-block">'+
+                '<div layout="row" layout-align="start stretch" layout-padding>'+
+                  '<md-input-container>'+
+                    '<label>Título</label>'+
+                    '<input ng-model="model.objName" ng-change="doSearch()"/>'+
+                  '</md-input-container>'+
+                  '<md-input-container>'+
+                    '<label>Descripción</label>'+
+                    '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
+                  '</md-input-container>'+
+                '</div>'+
               '</div>'+
-              '<div layout="column" layout-padding>'+
-                '<md-input-container>'+
-                  '<label>Tags</label>'+
-                  '<input ng-model="model.objTags" ng-change="doSearch()"/>'+
-                '</md-input-container>'+
-                '<md-input-container>'+
-                  '<label>Tipos Documentales</label>'+
-                  '<input ng-model="model.objInterface" ng-change="doSearch()"/>'+
-                '</md-input-container>'+
+              '<md-chips name="Tags" ng-model="model.objTags" placeholder="Tags">'+
+              '</md-chips>'+
+              '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
+                '<md-chip-template>'+
+                  '{{map[$chip].objName}}'+
+                '</md-chip-template>'+
+              '</md-chips>'+
+            '</md-dialog-content>'+
+            '<md-dialog-actions>'+
+              '<md-button ng-click="close()">'+
+                '<md-icon md-font-set="material-icons">close</md-icon>'+
+                '<span>cerrar</span>'+
+              '</md-button>'+
+              '<md-button ng-click="save()" class="md-primary">'+
+                '<md-icon md-font-set="material-icons">done</md-icon>'+
+                '<span>Guardar</span>'+
+              '</md-button>'+
+            '</md-dialog-actions>'+
+          '</form>'+
+        '</md-dialog>';
+
+
+      var securityDialogTemplate =
+        '<md-dialog>'+
+          '<form>'+
+            '<md-toolbar>'+
+              '<div class="md-toolbar-tools">'+
+                '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
               '</div>'+
+            '</md-toolbar>'+
+            '<md-dialog-content layout="column" layout-padding>'+
+              '<div class="inline-block">'+
+                '<div layout="row" layout-align="start stretch" layout-padding>'+
+                  '<md-input-container>'+
+                    '<label>Título</label>'+
+                    '<input ng-model="model.objName" ng-change="doSearch()"/>'+
+                  '</md-input-container>'+
+                  '<md-input-container>'+
+                    '<label>Descripción</label>'+
+                    '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
+                  '</md-input-container>'+
+                '</div>'+
+              '</div>'+
+              '<md-chips name="Tags" ng-model="model.objTags" placeholder="Tags">'+
+              '</md-chips>'+
+              '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
+                '<md-chip-template>'+
+                  '{{map[$chip].objName}}'+
+                '</md-chip-template>'+
+              '</md-chips>'+
             '</md-dialog-content>'+
             '<md-dialog-actions>'+
               '<md-button ng-click="close()">'+
@@ -477,23 +527,48 @@
             template: metadataDialogTemplate,
             targetEvent: $event,
             locals: {
-              model: $scope.copy
+              model: $scope.copy,
+              map: $scope.map
             },
             clickOutsideToClose: true,
-            controller: function($scope, $mdDialog, model) {
-              $scope.model = model;
-              $scope.save = function(model) {
-                $mdDialog.hide(model);
+            controller: function($scope, $mdDialog, model, map) {
+              $scope.model = angular.merge({objTags: [], objInterface: []}, model);
+              $scope.map = map;
+              $scope.save = function() {
+                $mdDialog.hide($scope.model);
               };
               $scope.close = function() {
                 $mdDialog.cancel();
               };
             }
           })
-          .then(function(iface) {
-
+          .then(function(edited) {
+            $scope.copy = edited;
           });
-        }
+        };
+
+        $scope.editSecurity = function($event) {
+          $mdDialog.show({
+            template: securityDialogTemplate,
+            targetEvent: $event,
+            locals: {
+              security: $scope.copy.objSecurity
+            },
+            clickOutsideToClose: true,
+            controller: function($scope, $mdDialog, security) {
+              $scope.security = angular.merge({}, security);
+              $scope.save = function() {
+                $mdDialog.hide($scope.security);
+              };
+              $scope.close = function() {
+                $mdDialog.cancel();
+              };
+            }
+          })
+          .then(function(security) {
+            $scope.copy.objSecurity = security;
+          });
+        };
 
         $scope.selectInterface = function(iface) {
           $scope.selectedInterface = iface;

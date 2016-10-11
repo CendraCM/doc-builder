@@ -254,20 +254,36 @@
               '</div>'+
             '</md-toolbar>'+
             '<md-dialog-content layout="column" layout-padding>'+
+              '<h4 class="md-title">Opciones Generales</h4>'+
+              '<md-divider></md-divider>'+
               '<div class="inline-block">'+
                 '<div layout="row" layout-align="start stretch" layout-padding>'+
-                  '<md-checkbox ng-disabled="model.inmutable" ng-model="model.inmutable">¿El documento es inmutable?</md-checkbox>'+
-                  '<md-checkbox ng-disabled="model.inmutable" ng-model="publicRead">¿Es público para leer?</md-checkbox>'+
-                  '<md-checkbox ng-disabled="model.inmutable" ng-if="publicRead" ng-model="publicWrite">¿Es público para Escribir?</md-checkbox>'+
+                  '<md-checkbox ng-disabled="security.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
+                  '<md-checkbox ng-disabled="security.inmutable" ng-model="publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
                 '</div>'+
               '</div>'+
-              '<md-chips name="owner" ng-model="model.owner" placeholder="Dueños">'+
-              '</md-chips>'+
-              '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
+              '<h4 class="md-title">Propietarios del Documento</h4>'+
+              '<md-divider></md-divider>'+
+              '<md-chips name="owner" md-autocomplete-snap readonly="security.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
+                '<md-autocomplete md-no-cache="true" md-items="item in getOwners(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                  '<md-item-template>'+
+                    '{{item.objName}}'+
+                  '</md-item-template>'+
+                '</md-autocomplete>'+
                 '<md-chip-template>'+
-                  '{{map[$chip].objName}}'+
+                  '{{$chip.objName}}'+
                 '</md-chip-template>'+
               '</md-chips>'+
+              '<h4 class="md-title">Control de Acceso</h4>'+
+              '<md-divider></md-divider>'+
+              '<md-autocomplete md-no-cache="true" md-items="item in getOwners(aclSearchText)"  md-search-text="aclSearchText" md-selected-item="aclSelectedItem" md-floating-label="Buscar Grupos">'+
+                '<md-item-template>'+
+                  '{{item.objName}}'+
+                '</md-item-template>'+
+              '</md-autocomplete>'+
+              '<div layout="row" layout-align="start center">'+
+                '<md-button ng-repeat="(key, item) in security.acl">{{key}}</md-button>'+
+              '</div>'+
             '</md-dialog-content>'+
             '<md-dialog-actions>'+
               '<md-button ng-click="close()">'+
@@ -387,7 +403,7 @@
       controller: function($scope, $mdToast, $mdDialog, $filter) {
         if(!$scope.interfaces) $scope.interfaces=[];
         $scope.stack = [];
-        $scope.$watch('ngModel', function(value) {
+        $scope.$watchCollection('ngModel', function(value) {
           $scope.copy = angular.merge({objName: 'Sin Título'}, value);
           if(!$scope.selectedModel) {
             $scope.selectedModel = $scope.copy;
@@ -402,8 +418,10 @@
 
         $scope.$watch('interfaces', function(value) {
           $scope.map = {};
+          $scope.nMap = {};
           (value||[]).forEach(function(iface) {
             $scope.map[iface._id] = iface;
+            $scope.nMap[iface.objName] = iface;
           });
         });
 
@@ -547,11 +565,49 @@
             template: securityDialogTemplate,
             targetEvent: $event,
             locals: {
-              security: $scope.copy.objSecurity
+              parent: $scope
             },
             clickOutsideToClose: true,
-            controller: function($scope, $mdDialog, security) {
-              $scope.security = angular.merge({}, security);
+            controller: function($scope, $mdDialog, $q, parent) {
+              var osunwatch = parent.$watch('copy.objSecurity', function(newVal, oldVal) {
+                $scope.security = angular.merge({}, newVal);
+                $scope.inmubable = !!newVal.inmubable;
+                $scope.owner = [];
+                if(!(newVal||{}).owner || !newVal.owner.length) return;
+                parent.$emit('docBuilder:search', {_id: {$in: newVal.owner}}, function(err, list) {
+                  if(!err) $scope.owner = list;
+                });
+              });
+
+              $scope.$on('$destroy', osunwatch);
+
+              $scope.togglePublicRead = function() {
+                if(!$scope.security.acl) $scope.security.acl = {};
+                if($scope.publicRead) {
+                  $scope.security.acl['group:public'] = {write: false};
+                } else {
+                  delete $scope.security.acl['group:public'];
+                }
+              };
+
+              $scope.getOwners = function(search) {
+                var filter = {
+                  objName: {$regex: search, $options: 'i'},
+                  objInterface: parent.nMap.GroupInterface._id
+                };
+                return $q(function(resolve, reject) {
+                  parent.$emit('docBuilder:search', filter, function(err, list) {
+                    if(err) return reject(err);
+                    var oid = $scope.owner.map(function(owner) {
+                      return owner._id;
+                    });
+                    resolve(list.filter(function(item) {
+                      return !oid.includes(item._id);
+                    }));
+                  });
+                });
+              };
+
               $scope.save = function() {
                 $mdDialog.hide($scope.security);
               };

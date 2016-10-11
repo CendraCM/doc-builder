@@ -256,17 +256,12 @@
             '<md-dialog-content layout="column" layout-padding>'+
               '<div class="inline-block">'+
                 '<div layout="row" layout-align="start stretch" layout-padding>'+
-                  '<md-input-container>'+
-                    '<label>Título</label>'+
-                    '<input ng-model="model.objName" ng-change="doSearch()"/>'+
-                  '</md-input-container>'+
-                  '<md-input-container>'+
-                    '<label>Descripción</label>'+
-                    '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
-                  '</md-input-container>'+
+                  '<md-checkbox ng-disabled="model.inmutable" ng-model="model.inmutable">¿El documento es inmutable?</md-checkbox>'+
+                  '<md-checkbox ng-disabled="model.inmutable" ng-model="publicRead">¿Es público para leer?</md-checkbox>'+
+                  '<md-checkbox ng-disabled="model.inmutable" ng-if="publicRead" ng-model="publicWrite">¿Es público para Escribir?</md-checkbox>'+
                 '</div>'+
               '</div>'+
-              '<md-chips name="Tags" ng-model="model.objTags" placeholder="Tags">'+
+              '<md-chips name="owner" ng-model="model.owner" placeholder="Dueños">'+
               '</md-chips>'+
               '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
                 '<md-chip-template>'+

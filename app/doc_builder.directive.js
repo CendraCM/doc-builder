@@ -1,6 +1,186 @@
 (function(){
   'use strict';
 
+  var interfaceDialogTemplate =
+    //'<md-dialog>'+
+      '<form>'+
+        '<md-toolbar>'+
+          '<div class="md-toolbar-tools">'+
+          '<h2 class="md-title">Agregar Tipo Documental</h2>'+
+          '</div>'+
+        '</md-toolbar>'+
+        //'<md-dialog-content layout="column" layout-padding>'+
+          '<div layout="row" layout="column" layout-padding layout-align="center center">'+
+            '<md-input-container>'+
+              '<label>Buscar</label>'+
+              '<md-icon md-font-set="material-icons">search</md-icon>'+
+              '<input ng-model="ifaceSearch"/>'+
+            '</md-input-container>'+
+          '</div>'+
+          '<div layout="row" layout-wrap>'+
+            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in implementable|filter:ifaceSearch" ng-click="addInterface(interface)">'+
+              '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
+              '<div>{{interface.objName}}</div>'+
+            '</div>'+
+          '</div>'+
+        /*'</md-dialog-content>'+
+        '<md-dialog-actions>'+
+          '<md-button ng-click="close()" class="md-primary">'+
+            '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '<span>cerrar</span>'+
+          '</md-button>'+
+        '</md-dialog-actions>'+*/
+      '</form>'/*+
+    '</md-dialog>'*/;
+
+    var documentDialogTemplate =
+      '<md-dialog>'+
+        '<form>'+
+          '<md-toolbar>'+
+            '<div class="md-toolbar-tools">'+
+              '<h2 class="md-title">Elegir Documento</h2>'+
+            '</div>'+
+          '</md-toolbar>'+
+          '<md-dialog-content layout="column" layout-padding>'+
+            '<div layout="row" layout-align="center center">'+
+              '<md-input-container>'+
+                '<label>Buscar</label>'+
+                '<md-icon md-font-set="material-icons">search</md-icon>'+
+                '<input ng-model="search" ng-change="doSearch()"/>'+
+              '</md-input-container>'+
+            '</div>'+
+            '<div layout="row" layout-wrap>'+
+              '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in documentList" ng-click="add(document)">'+
+                '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
+                '<div>{{document.objName}}</div>'+
+              '</div>'+
+            '</div>'+
+          '</md-dialog-content>'+
+          '<md-dialog-actions>'+
+            '<md-button ng-click="new()">'+
+              '<md-icon md-font-set="material-icons">add</md-icon>'+
+              '<span>nuevo</span>'+
+            '</md-button>'+
+            '<md-button ng-click="close()">'+
+              '<md-icon md-font-set="material-icons">close</md-icon>'+
+              '<span>cerrar</span>'+
+            '</md-button>'+
+          '</md-dialog-actions>'+
+        '</form>'+
+      '</md-dialog>';
+
+      var metadataDialogTemplate =
+        '<md-dialog>'+
+          '<form>'+
+            '<md-toolbar>'+
+              '<div class="md-toolbar-tools">'+
+                '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
+              '</div>'+
+            '</md-toolbar>'+
+            '<md-dialog-content layout="column" layout-padding>'+
+              '<div class="inline-block">'+
+                '<div layout="row" layout-align="start stretch" layout-padding>'+
+                  '<md-input-container>'+
+                    '<label>Título</label>'+
+                    '<input ng-model="model.objName" ng-change="doSearch()"/>'+
+                  '</md-input-container>'+
+                  '<md-input-container>'+
+                    '<label>Descripción</label>'+
+                    '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
+                  '</md-input-container>'+
+                '</div>'+
+              '</div>'+
+              '<md-chips name="Tags" ng-model="model.objTags" placeholder="Tags">'+
+              '</md-chips>'+
+              '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
+                '<md-chip-template>'+
+                  '{{map[$chip].objName}}'+
+                '</md-chip-template>'+
+              '</md-chips>'+
+            '</md-dialog-content>'+
+            '<md-dialog-actions>'+
+              '<md-button ng-click="close()">'+
+                '<md-icon md-font-set="material-icons">close</md-icon>'+
+                '<span>cerrar</span>'+
+              '</md-button>'+
+              '<md-button ng-click="save()" class="md-primary">'+
+                '<md-icon md-font-set="material-icons">done</md-icon>'+
+                '<span>Guardar</span>'+
+              '</md-button>'+
+            '</md-dialog-actions>'+
+          '</form>'+
+        '</md-dialog>';
+
+
+      var securityDialogTemplate =
+        '<md-dialog>'+
+          '<form>'+
+            '<md-toolbar>'+
+              '<div class="md-toolbar-tools">'+
+                '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
+              '</div>'+
+            '</md-toolbar>'+
+            '<md-dialog-content>'+
+              '<md-tabs>'+
+                '<md-tab>'+
+                  '<md-tab-label>'+
+                    '<md-icon md-font-set="material-icons">settings</md-icon>'+
+                  '</md-tab-label>'+
+                  '<md-tab-body>'+
+                    '<h4>Opciones Generales</h4>'+
+                    '<div class="inline-block">'+
+                      '<div layout="row" layout-align="start stretch" layout-padding>'+
+                        '<md-checkbox ng-disabled="security.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
+                        '<md-checkbox ng-disabled="security.inmutable" ng-model="publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
+                      '</div>'+
+                    '</div>'+
+                  '</md-tab-body>'+
+                '</md-tab>'+
+                '<md-tab label="Propietarios">'+
+                  '<md-tab-label>'+
+                    '<md-icon md-font-set="material-icons">people</md-icon>'+
+                  '</md-tab-label>'+
+                  '<md-tab-body>'+
+                    '<h4>Propietarios del Documento</h4>'+
+                    '<md-chips name="owner" md-autocomplete-snap readonly="security.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
+                      '<md-autocomplete md-no-cache="true" md-items="item in getOwners(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                        '<md-item-template>'+
+                          '{{item.objName}}'+
+                        '</md-item-template>'+
+                      '</md-autocomplete>'+
+                      '<md-chip-template>'+
+                        '{{$chip.objName}}'+
+                      '</md-chip-template>'+
+                    '</md-chips>'+
+                  '</md-tab-body>'+
+                '</md-tab>'+
+                '<md-tab label="Control de Acceso">'+
+                  '<md-divider></md-divider>'+
+                  '<md-autocomplete md-no-cache="true" md-items="item in getOwners(aclSearchText)"  md-search-text="aclSearchText" md-selected-item="aclSelectedItem" md-floating-label="Buscar Grupos">'+
+                    '<md-item-template>'+
+                      '{{item.objName}}'+
+                    '</md-item-template>'+
+                  '</md-autocomplete>'+
+                  '<div layout="row" layout-align="start center">'+
+                    '<md-button ng-repeat="(key, item) in security.acl">{{key}}</md-button>'+
+                  '</div>'+
+                '</md-tab>'+
+              '</md-tabs>'+
+            '</md-dialog-content>'+
+            '<md-dialog-actions>'+
+              '<md-button ng-click="close()">'+
+                '<md-icon md-font-set="material-icons">close</md-icon>'+
+                '<span>cerrar</span>'+
+              '</md-button>'+
+              '<md-button ng-click="save()" class="md-primary">'+
+                '<md-icon md-font-set="material-icons">done</md-icon>'+
+                '<span>Guardar</span>'+
+              '</md-button>'+
+            '</md-dialog-actions>'+
+          '</form>'+
+        '</md-dialog>';
+
+
   var treeTemplate =
     '<md-list flex ng-switch="schema.type" layout="column" class="md-whiteframe-1dp">'+
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
@@ -100,7 +280,7 @@
           '</div>'+
           '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
           '<span flex></span>'+
-          //'{{copy}}'+
+          '{{copy}}'+
           '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
             '<md-icon md-font-set="material-icons">{{stack.length?\'done_all\':\'done\'}}</md-icon>'+
           '</md-button>'+
@@ -117,6 +297,25 @@
         '<div class="md-caption" flex>{{copy.objDescription}}</div>'+
       '</div>'+
     '</form>'+
+    '<md-tabs flex md-dynamic-height="false" md-autoselect="true">'+
+      '<md-tab ng-repeat="interface in copy.objInterface">'+
+        '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
+        '<md-tab-body>'+
+          '<md-tab-content flex layout="column">'+
+            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit" interface="map[interface]"></doc-builder-tab>'+
+          '</md-tab-content>'+
+        '</md-tab-body>'+
+      '</md-tab>'+
+      '<md-tab label="base">'+
+        '<md-tab-content flex layout="column">'+
+          '<doc-builder-tab flex layout="column" ng-model="copy" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>'+
+        '</md-tab-content>'+
+      '</md-tab>'+
+      '<md-tab flex>'+
+        '<md-tab-label><md-icon md-font-set="material-icons">library_add</md-icon></md-tab-label>'+
+        '<md-tab-body>'+interfaceDialogTemplate+'</md-tab-body>'+
+      '</md-tab>'+
+    '</md-tabs>'/*+
     '<div layout="row">'+
       '<md-button ng-if="copy.objInterface && copy.objInterface.length" ng-repeat="interface in copy.objInterface" ng-class="{\'md-primary\': selectedInterface == interface}" ng-click="selectInterface(interface)">{{getName(interface).plain}}</md-button>'+
       '<md-button ng-click="selectInterface()" ng-class="{\'md-primary\': !selectedInterface}">'+
@@ -132,171 +331,8 @@
       '<div layout="column" layout-align="end center"><md-icon md-font-set="material-icons" ng-if="copy.objTags && copy.objTags.length > 5">more_horiz</md-icon></div>'+
     '</div>'+
     '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" ng-show="selectedInterface==interface" edit="edit" ng-repeat="interface in copy.objInterface" interface="map[interface]"></doc-builder-tab>'+
-    '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>';
+    '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>'*/;
 
-  var interfaceDialogTemplate =
-    '<md-dialog>'+
-      '<form>'+
-        '<md-toolbar>'+
-          '<div class="md-toolbar-tools">'+
-          '<h2 class="md-title">Agregar Tipo Documental</h2>'+
-          '</div>'+
-        '</md-toolbar>'+
-        '<md-dialog-content layout="column" layout-padding>'+
-          '<div layout="row" layout="column" layout-padding layout-align="center center">'+
-            '<md-input-container>'+
-              '<label>Buscar</label>'+
-              '<md-icon md-font-set="material-icons">search</md-icon>'+
-              '<input ng-model="search"/>'+
-            '</md-input-container>'+
-          '</div>'+
-          '<div layout="row" layout-wrap>'+
-            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in interfaces|filter:search" ng-click="add(interface)">'+
-              '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
-              '<div>{{interface.objName}}</div>'+
-            '</div>'+
-          '</div>'+
-        '</md-dialog-content>'+
-        '<md-dialog-actions>'+
-          '<md-button ng-click="close()" class="md-primary">'+
-            '<md-icon md-font-set="material-icons">close</md-icon>'+
-            '<span>cerrar</span>'+
-          '</md-button>'+
-        '</md-dialog-actions>'+
-      '</form>'+
-    '</md-dialog>';
-
-    var documentDialogTemplate =
-      '<md-dialog>'+
-        '<form>'+
-          '<md-toolbar>'+
-            '<div class="md-toolbar-tools">'+
-              '<h2 class="md-title">Elegir Documento</h2>'+
-            '</div>'+
-          '</md-toolbar>'+
-          '<md-dialog-content layout="column" layout-padding>'+
-            '<div layout="row" layout-align="center center">'+
-              '<md-input-container>'+
-                '<label>Buscar</label>'+
-                '<md-icon md-font-set="material-icons">search</md-icon>'+
-                '<input ng-model="search" ng-change="doSearch()"/>'+
-              '</md-input-container>'+
-            '</div>'+
-            '<div layout="row" layout-wrap>'+
-              '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in documentList" ng-click="add(document)">'+
-                '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
-                '<div>{{document.objName}}</div>'+
-              '</div>'+
-            '</div>'+
-          '</md-dialog-content>'+
-          '<md-dialog-actions>'+
-            '<md-button ng-click="new()">'+
-              '<md-icon md-font-set="material-icons">add</md-icon>'+
-              '<span>nuevo</span>'+
-            '</md-button>'+
-            '<md-button ng-click="close()">'+
-              '<md-icon md-font-set="material-icons">close</md-icon>'+
-              '<span>cerrar</span>'+
-            '</md-button>'+
-          '</md-dialog-actions>'+
-        '</form>'+
-      '</md-dialog>';
-
-      var metadataDialogTemplate =
-        '<md-dialog>'+
-          '<form>'+
-            '<md-toolbar>'+
-              '<div class="md-toolbar-tools">'+
-                '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
-              '</div>'+
-            '</md-toolbar>'+
-            '<md-dialog-content layout="column" layout-padding>'+
-              '<div class="inline-block">'+
-                '<div layout="row" layout-align="start stretch" layout-padding>'+
-                  '<md-input-container>'+
-                    '<label>Título</label>'+
-                    '<input ng-model="model.objName" ng-change="doSearch()"/>'+
-                  '</md-input-container>'+
-                  '<md-input-container>'+
-                    '<label>Descripción</label>'+
-                    '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
-                  '</md-input-container>'+
-                '</div>'+
-              '</div>'+
-              '<md-chips name="Tags" ng-model="model.objTags" placeholder="Tags">'+
-              '</md-chips>'+
-              '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
-                '<md-chip-template>'+
-                  '{{map[$chip].objName}}'+
-                '</md-chip-template>'+
-              '</md-chips>'+
-            '</md-dialog-content>'+
-            '<md-dialog-actions>'+
-              '<md-button ng-click="close()">'+
-                '<md-icon md-font-set="material-icons">close</md-icon>'+
-                '<span>cerrar</span>'+
-              '</md-button>'+
-              '<md-button ng-click="save()" class="md-primary">'+
-                '<md-icon md-font-set="material-icons">done</md-icon>'+
-                '<span>Guardar</span>'+
-              '</md-button>'+
-            '</md-dialog-actions>'+
-          '</form>'+
-        '</md-dialog>';
-
-
-      var securityDialogTemplate =
-        '<md-dialog>'+
-          '<form>'+
-            '<md-toolbar>'+
-              '<div class="md-toolbar-tools">'+
-                '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
-              '</div>'+
-            '</md-toolbar>'+
-            '<md-dialog-content layout="column" layout-padding>'+
-              '<h4 class="md-title">Opciones Generales</h4>'+
-              '<md-divider></md-divider>'+
-              '<div class="inline-block">'+
-                '<div layout="row" layout-align="start stretch" layout-padding>'+
-                  '<md-checkbox ng-disabled="security.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
-                  '<md-checkbox ng-disabled="security.inmutable" ng-model="publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
-                '</div>'+
-              '</div>'+
-              '<h4 class="md-title">Propietarios del Documento</h4>'+
-              '<md-divider></md-divider>'+
-              '<md-chips name="owner" md-autocomplete-snap readonly="security.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
-                '<md-autocomplete md-no-cache="true" md-items="item in getOwners(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
-                  '<md-item-template>'+
-                    '{{item.objName}}'+
-                  '</md-item-template>'+
-                '</md-autocomplete>'+
-                '<md-chip-template>'+
-                  '{{$chip.objName}}'+
-                '</md-chip-template>'+
-              '</md-chips>'+
-              '<h4 class="md-title">Control de Acceso</h4>'+
-              '<md-divider></md-divider>'+
-              '<md-autocomplete md-no-cache="true" md-items="item in getOwners(aclSearchText)"  md-search-text="aclSearchText" md-selected-item="aclSelectedItem" md-floating-label="Buscar Grupos">'+
-                '<md-item-template>'+
-                  '{{item.objName}}'+
-                '</md-item-template>'+
-              '</md-autocomplete>'+
-              '<div layout="row" layout-align="start center">'+
-                '<md-button ng-repeat="(key, item) in security.acl">{{key}}</md-button>'+
-              '</div>'+
-            '</md-dialog-content>'+
-            '<md-dialog-actions>'+
-              '<md-button ng-click="close()">'+
-                '<md-icon md-font-set="material-icons">close</md-icon>'+
-                '<span>cerrar</span>'+
-              '</md-button>'+
-              '<md-button ng-click="save()" class="md-primary">'+
-                '<md-icon md-font-set="material-icons">done</md-icon>'+
-                '<span>Guardar</span>'+
-              '</md-button>'+
-            '</md-dialog-actions>'+
-          '</form>'+
-        '</md-dialog>';
 
   var isEmpty = function(element) {
     var type = getType(element);
@@ -510,8 +546,10 @@
           $scope.$emit('docBuilder:backStack');
         };
 
-        $scope.addInterface = function($event) {
-          $mdDialog.show({
+        $scope.addInterface = function(iface) {
+          if(!$scope.copy.objInterface) $scope.copy.objInterface = [];
+          $scope.copy.objInterface.push(iface._id);
+          /*$mdDialog.show({
             template: interfaceDialogTemplate,
             targetEvent: $event,
             locals: {
@@ -532,7 +570,7 @@
             if(!$scope.copy.objInterface) $scope.copy.objInterface=[];
             $scope.copy.objInterface.push(iface._id);
             $scope.selectInterface(iface._id);
-          });
+          });*/
         };
 
         $scope.editMetadata = function($event) {

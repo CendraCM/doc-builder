@@ -39,6 +39,7 @@
           '<md-toolbar>'+
             '<div class="md-toolbar-tools">'+
               '<h2 class="md-title">Elegir Documento</h2>'+
+
             '</div>'+
           '</md-toolbar>'+
           '<md-dialog-content layout="column" layout-padding>'+
@@ -70,35 +71,39 @@
       '</md-dialog>';
 
       var metadataDialogTemplate =
-        '<md-dialog>'+
+        //'<md-dialog>'+
           '<form>'+
             '<md-toolbar>'+
               '<div class="md-toolbar-tools">'+
                 '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
+                '<span flex></span>'+
+                '<md-button class="md-icon-button" ng-click="$parent.metadataFlag=false">'+
+                  '<md-icon md-font-set="material-icons">close</md-icon>'+
+                '</md-button>'+
               '</div>'+
             '</md-toolbar>'+
-            '<md-dialog-content layout="column" layout-padding>'+
+            //'<md-dialog-content layout="column" layout-padding>'+
               '<div class="inline-block">'+
                 '<div layout="row" layout-align="start stretch" layout-padding>'+
                   '<md-input-container>'+
                     '<label>Título</label>'+
-                    '<input ng-model="model.objName" ng-change="doSearch()"/>'+
+                    '<input ng-model="metadata.objName"/>'+
                   '</md-input-container>'+
                   '<md-input-container>'+
                     '<label>Descripción</label>'+
-                    '<input ng-model="model.objDescription" ng-change="doSearch()"/>'+
+                    '<input ng-model="metadata.objDescription"/>'+
                   '</md-input-container>'+
                 '</div>'+
               '</div>'+
-              '<md-chips name="Tags" ng-model="model.objTags" placeholder="Tags">'+
+              '<md-chips name="Tags" ng-model="metadata.objTags" placeholder="Tags">'+
               '</md-chips>'+
-              '<md-chips ng-model="model.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
+              '<md-chips ng-model="metadata.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true">'+
                 '<md-chip-template>'+
                   '{{map[$chip].objName}}'+
                 '</md-chip-template>'+
               '</md-chips>'+
-            '</md-dialog-content>'+
-            '<md-dialog-actions>'+
+            //'</md-dialog-content>'+
+            /*'<md-dialog-actions>'+
               '<md-button ng-click="close()">'+
                 '<md-icon md-font-set="material-icons">close</md-icon>'+
                 '<span>cerrar</span>'+
@@ -107,9 +112,9 @@
                 '<md-icon md-font-set="material-icons">done</md-icon>'+
                 '<span>Guardar</span>'+
               '</md-button>'+
-            '</md-dialog-actions>'+
-          '</form>'+
-        '</md-dialog>';
+            '</md-dialog-actions>'+*/
+          '</form>'/*+
+        '</md-dialog>'*/;
 
 
       var securityDialogTemplate =
@@ -297,7 +302,7 @@
         '<div class="md-caption" flex>{{copy.objDescription}}</div>'+
       '</div>'+
     '</form>'+
-    '<md-tabs flex md-dynamic-height="false" md-autoselect="true">'+
+    '<md-tabs flex md-dynamic-height="false" md-autoselect="true" ng-if="!metadataFlag">'+
       '<md-tab ng-repeat="interface in copy.objInterface">'+
         '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
         '<md-tab-body>'+
@@ -315,7 +320,10 @@
         '<md-tab-label><md-icon md-font-set="material-icons">library_add</md-icon></md-tab-label>'+
         '<md-tab-body>'+interfaceDialogTemplate+'</md-tab-body>'+
       '</md-tab>'+
-    '</md-tabs>'/*+
+    '</md-tabs>'+
+    '<div ng-if="metadataFlag">'+
+    metadataDialogTemplate+
+    '</div>'/*+
     '<div layout="row">'+
       '<md-button ng-if="copy.objInterface && copy.objInterface.length" ng-repeat="interface in copy.objInterface" ng-class="{\'md-primary\': selectedInterface == interface}" ng-click="selectInterface(interface)">{{getName(interface).plain}}</md-button>'+
       '<md-button ng-click="selectInterface()" ng-class="{\'md-primary\': !selectedInterface}">'+
@@ -441,9 +449,6 @@
         $scope.stack = [];
         $scope.$watchCollection('ngModel', function(value) {
           $scope.copy = angular.merge({objName: 'Sin Título'}, value);
-          if(!$scope.selectedModel) {
-            $scope.selectedModel = $scope.copy;
-          }
         });
 
         $scope.$watchCollection('copy.objInterface', function(value) {
@@ -574,7 +579,9 @@
         };
 
         $scope.editMetadata = function($event) {
-          $mdDialog.show({
+          $scope.metadata = angular.merge({objTags: [], objInterface: []}, $scope.copy);
+          $scope.metadataFlag = true;
+          /*$mdDialog.show({
             template: metadataDialogTemplate,
             targetEvent: $event,
             locals: {
@@ -595,7 +602,7 @@
           })
           .then(function(edited) {
             $scope.copy = edited;
-          });
+          });*/
         };
 
         $scope.editSecurity = function($event) {
@@ -760,7 +767,7 @@
             $scope.schema = buildSchema(value);
           }
           if(!$scope.schema) $scope.schema = {type: 'object'};
-          if(!$scope.selected) $scope.$emit('docBuilder:select', (value.objInterface&&value.objInterface.length&&value.objInterface[0])||null);
+          if(!$scope.selected||$scope.selected.root) $scope.$emit('docBuilder:select', (value.objInterface&&value.objInterface.length&&value.objInterface[0])||null);
         });
 
         $scope.$on('docBuilder:select', function($event, value, dblck) {

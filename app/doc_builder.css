@@ -61,3 +61,15 @@ doc-builder schema-list.ng-enter {
 doc-builder .lvl {
   font-weight: bold;
 }
+
+doc-builder .dialog {
+  margin-top: 8px;
+}
+
+doc-builder .space {
+  width: 24px;
+}
+
+.layout-padding > doc-builder-acl-tree {
+  padding: 0px;
+}

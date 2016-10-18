@@ -1,6 +1,17 @@
 (function(){
   'use strict';
 
+  var aclTreeTemplate =
+    '<div layout="column" ng-repeat="item in _acl">'+
+      '<div layout="row">'+
+        '<div ng-repeat="space in $parent.spaces track by $index" class="space"></div>'+
+        '<span>{{item.key}}</span>'+
+        '<md-checkbox ng-model="item.read" ng-change="aclChange(item)">R</md-checkbox>'+
+        '<md-checkbox ng-disabled="!item.read || !writable" ng-model="item.write" ng-change="aclChange(item)">W</md-checkbox>'+
+      '</div>'+
+      '<doc-builder-acl-tree ng-if="item.read && item.properties" writable="writable && item.read" properties="item.properties" acl="acl" level="level" parent="item.path"></doc-builder-acl-tree>'+
+    '</div>';
+
   var interfaceDialogTemplate =
     //'<md-dialog>'+
       '<form>'+
@@ -75,7 +86,7 @@
 
       var metadataDialogTemplate =
         //'<md-dialog>'+
-          '<form>'+
+          '<form class="dialog" md-whiteframe="2">'+
             '<md-toolbar>'+
               '<div class="md-toolbar-tools">'+
                 '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
@@ -89,19 +100,18 @@
               '</div>'+
             '</md-toolbar>'+
             //'<md-dialog-content layout="column" layout-padding>'+
-              '<div class="inline-block">'+
-                '<h4>Datos Generales</h4>'+
-                '<md-divider></md-divider>'+
-                '<div layout="column" layout-align="start stretch" layout-padding>'+
-                  '<md-input-container>'+
-                    '<label>Título</label>'+
-                    '<input ng-model="metadata.objName"/>'+
-                  '</md-input-container>'+
-                  '<md-input-container>'+
-                    '<label>Descripción</label>'+
-                    '<input ng-model="metadata.objDescription"/>'+
-                  '</md-input-container>'+
-                '</div>'+
+            '<div layout-padding>'+
+              '<h4>Datos Generales</h4>'+
+              '<md-divider></md-divider>'+
+              '<div layout="column" layout-align="start stretch" layout-padding>'+
+                '<md-input-container>'+
+                  '<label>Título</label>'+
+                  '<input ng-model="metadata.objName"/>'+
+                '</md-input-container>'+
+                '<md-input-container>'+
+                  '<label>Descripción</label>'+
+                  '<input ng-model="metadata.objDescription"/>'+
+                '</md-input-container>'+
               '</div>'+
               '<h4>Tags</h4>'+
               '<md-divider></md-divider>'+
@@ -116,6 +126,7 @@
                   '</md-chip-template>'+
                 '</md-chips>'+
               '</div>'+
+            '</div>'+
             //'</md-dialog-content>'+
             /*'<md-dialog-actions>'+
               '<md-button ng-click="close()">'+
@@ -133,7 +144,7 @@
 
       var securityDialogTemplate =
         //'<md-dialog>'+
-          '<form>'+
+          '<form class="dialog" md-whiteframe="2">'+
             '<md-toolbar>'+
               '<div class="md-toolbar-tools">'+
                 '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
@@ -144,52 +155,63 @@
               '</div>'+
             '</md-toolbar>'+
             //'<md-dialog-content>'+
-              '<md-tabs>'+
+              //'{{security}}'+
+              '{{selectedAcl}}'+
+              '<md-tabs md-autoselect md-dynamic-height="true">'+
                 '<md-tab>'+
                   '<md-tab-label>'+
                     '<md-icon md-font-set="material-icons">settings</md-icon>'+
                     '<span style="margin-left: 8px">Opciones Generales</span>'+
                   '</md-tab-label>'+
                   '<md-tab-body>'+
-                    '<div class="inline-block">'+
-                      '<div layout="row" layout-align="start stretch" layout-padding>'+
+                      '<div layout="column" layout-align="start stretch" layout-padding>'+
                         '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
-                        '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
+                        '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="$parent.publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
                       '</div>'+
-                    '</div>'+
-                  '</md-tab-body>'+
-                '</md-tab>'+
-                '<md-tab label="Propietarios">'+
-                  '<md-tab-label>'+
-                    '<md-icon md-font-set="material-icons">people</md-icon>'+
-                    '<span style="margin-left: 8px">Propietarios</span>'+
-                  '</md-tab-label>'+
-                  '<md-tab-body>'+
-                    '<md-chips name="owner" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
-                      '<md-autocomplete md-no-cache="true" md-items="item in getOwners(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
-                        '<md-item-template>'+
-                          '{{item.objName}}'+
-                        '</md-item-template>'+
-                      '</md-autocomplete>'+
-                      '<md-chip-template>'+
-                        '{{$chip.objName}}'+
-                      '</md-chip-template>'+
-                    '</md-chips>'+
                   '</md-tab-body>'+
                 '</md-tab>'+
                 '<md-tab>'+
                   '<md-tab-label>'+
-                    '<md-icon md-font-set="material-icons">verified_user</md-icon>'+
-                    '<span style="margin-left: 8px">Control de Acceso</span>'+
+                    '<md-icon md-font-set="material-icons">people</md-icon>'+
+                    '<span style="margin-left: 8px">Grupos</span>'+
                   '</md-tab-label>'+
                   '<md-tab-body>'+
-                    '<md-autocomplete md-no-cache="true" md-items="item in getOwners(aclSearchText)"  md-search-text="aclSearchText" md-selected-item="aclSelectedItem" md-floating-label="Buscar Grupos">'+
-                      '<md-item-template>'+
-                        '{{item.objName}}'+
-                      '</md-item-template>'+
-                    '</md-autocomplete>'+
-                    '<div layout="row" layout-align="start center">'+
-                      '<md-button ng-repeat="(key, item) in security.acl">{{key}}</md-button>'+
+                    '<div layout-padding layout="column" flex>'+
+                      '<h4>Propietarios</h4>'+
+                      '<md-chips name="owner" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
+                        '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                          '<md-item-template>'+
+                            '{{item.objName}}'+
+                          '</md-item-template>'+
+                        '</md-autocomplete>'+
+                        '<md-chip-template>'+
+                          '{{$chip.objName}}'+
+                        '</md-chip-template>'+
+                      '</md-chips>'+
+                      '<h4>Grupos con Acceso</h4>'+
+                      '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
+                        '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                          '<md-item-template>'+
+                            '{{item.objName}}'+
+                          '</md-item-template>'+
+                        '</md-autocomplete>'+
+                        '<md-chip-template>'+
+                          '{{$chip.objName}}'+
+                        '</md-chip-template>'+
+                      '</md-chips>'+
+                    '</div>'+
+                  '</md-tab-body>'+
+                '</md-tab>'+
+                '<md-tab ng-if="selectedAcl" md-on-deselect="$parent.selectedAcl=false">'+
+                  '<md-tab-label>'+
+                    '<md-icon md-font-set="material-icons">verified_user</md-icon>'+
+                    '<span style="margin-left: 8px">{{selectedAcl.objName}}</span>'+
+                  '</md-tab-label>'+
+                  '<md-tab-body>'+
+                    '<div layout-padding layout="column" flex>'+
+                      '<md-checkbox ng-model="selectedAcl._acl.write">Edita Metadatos</md-checkbox>'+
+                      '<h4>Propiedades del Documento</h4>'+
+                      '<doc-builder-acl-tree acl="selectedAcl._acl.properties" properties="copy"></doc-builder-acl-tree>'+
                     '</div>'+
                   '</md-tab-body>'+
                 '</md-tab>'+
@@ -347,10 +369,10 @@
         '<md-tab-body>'+interfaceDialogTemplate+'</md-tab-body>'+
       '</md-tab>'+
     '</md-tabs>'+
-    '<div ng-if="metadataFlag" md-whiteframe="2">'+
+    '<div ng-if="metadataFlag">'+
     metadataDialogTemplate+
     '</div>'+
-    '<div ng-if="securityFlag" md-whiteframe="2">'+
+    '<div ng-if="securityFlag">'+
     securityDialogTemplate+
     '</div>'/*+
     '<div layout="row">'+
@@ -646,13 +668,15 @@
         $scope.togglePublicRead = function() {
           if(!$scope.security.acl) $scope.security.acl = {};
           if($scope.publicRead) {
-            $scope.security.acl['group:public'] = {write: false};
+            if(!$scope.acl.map(function(a) {return a._id;}).includes('group:public')) $scope.acl.push({_id: 'group:public', objName: 'Público', _acl: {write: false}});
           } else {
-            delete $scope.security.acl['group:public'];
+            $scope.acl = $scope.acl.filter(function(a) {
+              return a._id != 'group:public';
+            });
           }
         };
 
-        $scope.getOwners = function(search) {
+        $scope.getGroups = function(search) {
           var filter = {
             objName: {$regex: search, $options: 'i'},
             objInterface: $scope.nMap.GroupInterface._id
@@ -673,12 +697,25 @@
         $scope.editSecurity = function($event) {
           $scope.securityFlag = !$scope.securityFlag;
           $scope.owner=[];
+          $scope.acl=[];
           if($scope.securityFlag) {
             $scope.metadataFlag = false;
             $scope.security = angular.merge({}, $scope.copy.objSecurity);
             if((($scope.security||{}).owner||[]).length) {
               $scope.$emit('docBuilder:search', {_id: {$in: $scope.security.owner}}, function(err, list) {
                 if(!err) $scope.owner = list;
+              });
+            }
+            if(!isEmpty($scope.security.acl)) {
+              if($scope.security.acl['group:public']) $scope.acl.push({_id: 'group:public', objName: 'Público', _acl: $scope.security.acl['group:public']});
+              var ids = Object.keys($scope.security.acl).filter(function(k){
+                return k!='group:public';
+              });
+              if(ids.length) $scope.$emit('docBuilder:search', {_id: {$in: ids}}, function(err, list) {
+                if(!err) list.forEach(function(d) {
+                  d._acl = $scope.security.acl[d._id];
+                  $scope.acl.push(d);
+                });
               });
             }
           }
@@ -1125,6 +1162,66 @@
             return 'Cargando..';
           }
           return docData[id].objName;
+        };
+      }
+    };
+  })
+  .directive('docBuilderAclTree', function() {
+    return {
+      restrict: 'E',
+      template: aclTreeTemplate,
+      scope: {
+        acl:'=',
+        properties: '=',
+        level: '<?',
+        parent: '<?',
+        writable: '<?'
+      },
+      controller: function($scope) {
+        $scope.getType = getType;
+        $scope.acl = $scope.acl||{};
+        $scope.level = ($scope.level||0)+1;
+        $scope.parent = ($scope.parent?$scope.parent+'.':'');
+        $scope.spaces = [];
+        var n = 0;
+        while(n < $scope.level - 1) {
+          $scope.spaces.push(null);
+          n++;
+        }
+        $scope._acl = [];
+        $scope.$watch('properties', function(newVal) {
+          /*var setKeys = function(elem, parent) {
+            parent = parent||[];
+            var items = [];*/
+            for(var i in newVal) {
+              if($scope.level === 1 && i.substr(0, 3) == 'obj') continue;
+              /*var p = angular.merge([], parent);
+              p.push(i);*/
+              var it = {
+                key: i,
+                path: $scope.parent+i,
+                read: $scope.acl[$scope.parent+i]===false?false:true,
+                write: typeof $scope.acl[$scope.parent+i]!=='undefined'?$scope.acl[$scope.parent+i]:($scope.writable||true)
+              };
+              if(getType(newVal[i]) == 'object') {
+                it.properties = newVal[i];/*setKeys(elem[i], p);*/
+              }
+              $scope._acl.push(it);
+            }
+          //};
+          //$scope._acl = setKeys(newVal);
+        });
+        $scope.$watch('writable', function(newVal) {
+          $scope.writable=typeof newVal==='undefined'?true:newVal;
+          if(!newVal) {
+            $scope._acl.forEach(function(acl) {
+              acl.write = false;
+            });
+          }
+        });
+        $scope.aclChange = function(acl) {
+          if(acl.read) return $scope.acl[acl.path] = acl.write;
+          delete $scope.acl[acl.path];
         };
       }
     };

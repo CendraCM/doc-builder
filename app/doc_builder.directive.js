@@ -5,11 +5,11 @@
     '<div layout="column" ng-repeat="item in _acl">'+
       '<div layout="row">'+
         '<div ng-repeat="space in $parent.spaces track by $index" class="space"></div>'+
-        '<span>{{item.key}}</span>'+
-        '<md-checkbox ng-model="item.read" ng-change="aclChange(item)">R</md-checkbox>'+
-        '<md-checkbox ng-disabled="!item.read || !writable" ng-model="item.write" ng-change="aclChange(item)">W</md-checkbox>'+
+        '<span class="md-body-2 offset-right">{{item.key}}</span>'+
+        '<md-checkbox ng-model="item.read" ng-change="aclChange(item)">Leer</md-checkbox>'+
+        '<md-checkbox ng-disabled="!item.read || !writable" ng-model="item.write" ng-change="aclChange(item)">Escribir</md-checkbox>'+
       '</div>'+
-      '<doc-builder-acl-tree ng-if="item.read && item.properties" writable="writable && item.read" properties="item.properties" acl="acl" level="level" parent="item.path"></doc-builder-acl-tree>'+
+      '<doc-builder-acl-tree ng-if="item.read && item.properties" properties="item.properties" acl="acl" level="level" parent="item.path"></doc-builder-acl-tree>'+
     '</div>';
 
   var interfaceDialogTemplate =
@@ -149,6 +149,9 @@
               '<div class="md-toolbar-tools">'+
                 '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
                 '<span flex></span>'+
+                '<md-button class="md-icon-button" ng-click="saveSecurity()">'+
+                  '<md-icon md-font-set="material-icons">done</md-icon>'+
+                '</md-button>'+
                 '<md-button class="md-icon-button" ng-click="$parent.securityFlag=false">'+
                   '<md-icon md-font-set="material-icons">close</md-icon>'+
                 '</md-button>'+
@@ -156,7 +159,7 @@
             '</md-toolbar>'+
             //'<md-dialog-content>'+
               //'{{security}}'+
-              '{{selectedAcl}}'+
+              //'{{$parent.selectedAcl}}'+
               '<md-tabs md-autoselect md-dynamic-height="true">'+
                 '<md-tab>'+
                   '<md-tab-label>'+
@@ -189,7 +192,7 @@
                         '</md-chip-template>'+
                       '</md-chips>'+
                       '<h4>Grupos con Acceso</h4>'+
-                      '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
+                      '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
                         '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
                           '<md-item-template>'+
                             '{{item.objName}}'+
@@ -202,7 +205,7 @@
                     '</div>'+
                   '</md-tab-body>'+
                 '</md-tab>'+
-                '<md-tab ng-if="selectedAcl" md-on-deselect="$parent.selectedAcl=false">'+
+                '<md-tab ng-if="$parent.selectedAcl" md-on-deselect="$parent.$parent.selectedAcl=false">'+
                   '<md-tab-label>'+
                     '<md-icon md-font-set="material-icons">verified_user</md-icon>'+
                     '<span style="margin-left: 8px">{{selectedAcl.objName}}</span>'+
@@ -210,8 +213,19 @@
                   '<md-tab-body>'+
                     '<div layout-padding layout="column" flex>'+
                       '<md-checkbox ng-model="selectedAcl._acl.write">Edita Metadatos</md-checkbox>'+
-                      '<h4>Propiedades del Documento</h4>'+
-                      '<doc-builder-acl-tree acl="selectedAcl._acl.properties" properties="copy"></doc-builder-acl-tree>'+
+                      '<md-divider></md-divider>'+
+                      '<div>'+
+                        '<h4 class="md-subhead">Configurar para Todas las Propiedades</h4>'+
+                        '<div layout="row" layout-align="start stretch">'+
+                          '<md-checkbox ng-model="$parent.$parent.readAll" ng-change="aclAllChange()">Leer</md-checkbox>'+
+                          '<md-checkbox ng-disabled="!$parent.$parent.readAll" ng-model="$parent.$parent.writeAll" ng-change="aclAllChange()">Escribir</md-checkbox>'+
+                        '</div>'+
+                      '</div>'+
+                      '<md-divider></md-divider>'+
+                      '<div ng-if="!$parent.readAll">'+
+                        '<h4 class="md-subhead">Configurar Propiedades Infividuales del Documento</h4>'+
+                        '<doc-builder-acl-tree acl="selectedAcl._acl.properties" properties="copy"></doc-builder-acl-tree>'+
+                      '</div>'+
                     '</div>'+
                   '</md-tab-body>'+
                 '</md-tab>'+
@@ -498,6 +512,9 @@
       controller: function($scope, $mdToast, $mdDialog, $filter, $q) {
         if(!$scope.interfaces) $scope.interfaces=[];
         $scope.stack = [];
+        $scope.selectedAcl = null;
+        $scope.readAll = false;
+        $scope.writeAll = false;
         $scope.$watchCollection('ngModel', function(value) {
           $scope.copy = angular.merge({objName: 'Sin Título'}, value);
         });
@@ -839,7 +856,10 @@
           }
           $scope.$broadcast('docBuilder:select', level.selected);
         });
-
+        $scope.aclAllChange = function() {
+          if($scope.readAll) $scope.selectedAcl._acl.properties = {'properties:all': $scope.writeAll};
+          else $scope.selectedAcl._acl.properties = {};
+        };
       }
     };
   })
@@ -1174,8 +1194,7 @@
         acl:'=',
         properties: '=',
         level: '<?',
-        parent: '<?',
-        writable: '<?'
+        parent: '<?'
       },
       controller: function($scope) {
         $scope.getType = getType;
@@ -1183,6 +1202,7 @@
         $scope.level = ($scope.level||0)+1;
         $scope.parent = ($scope.parent?$scope.parent+'.':'');
         $scope.spaces = [];
+        $scope.writable = true;
         var n = 0;
         while(n < $scope.level - 1) {
           $scope.spaces.push(null);
@@ -1200,7 +1220,7 @@
               var it = {
                 key: i,
                 path: $scope.parent+i,
-                read: $scope.acl[$scope.parent+i]===false?false:true,
+                read: typeof $scope.acl[$scope.parent+i]!=='undefined',
                 write: typeof $scope.acl[$scope.parent+i]!=='undefined'?$scope.acl[$scope.parent+i]:($scope.writable||true)
               };
               if(getType(newVal[i]) == 'object') {
@@ -1211,15 +1231,16 @@
           //};
           //$scope._acl = setKeys(newVal);
         });
-        $scope.$watch('writable', function(newVal) {
-          $scope.writable=typeof newVal==='undefined'?true:newVal;
-          if(!newVal) {
-            $scope._acl.forEach(function(acl) {
+        $scope.$on('docBuilderAclTree:write', function($event, path, write) {
+          if(new RegExp(path).test($scope.parent)) {
+            $scope.writable = write;
+            if(!write) $scope._acl.forEach(function(acl) {
               acl.write = false;
             });
           }
         });
         $scope.aclChange = function(acl) {
+          $scope.$broadcast('docBuilderAclTree:write', acl.path, acl.write);
           if(acl.read) return $scope.acl[acl.path] = acl.write;
           delete $scope.acl[acl.path];
         };

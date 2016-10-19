@@ -70,6 +70,10 @@ doc-builder .space {
   width: 24px;
 }
 
+doc-builder .offset-right {
+  margin-right: 8px;
+}
+
 .layout-padding > doc-builder-acl-tree {
   padding: 0px;
 }

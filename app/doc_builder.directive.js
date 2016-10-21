@@ -44,206 +44,204 @@
       '</form>'/*+
     '</md-dialog>'*/;
 
-    var documentDialogTemplate =
-      //'<md-dialog>'+
-        '<form>'+
-          '<md-toolbar>'+
-            '<div class="md-toolbar-tools">'+
-              '<h2 class="md-title">Elegir Documento</h2>'+
-              '<span flex></span>'+
-              '<md-button class="md-icon-button" ng-click="$parent.documentFlag=false">'+
-                '<md-icon md-font-set="material-icons">close</md-icon>'+
-              '</md-button>'+
-            '</div>'+
-          '</md-toolbar>'+
-          //'<md-dialog-content layout="column" layout-padding>'+
-            '<div layout="row" layout-align="center center">'+
-              '<md-input-container>'+
-                '<label>Buscar</label>'+
-                '<md-icon md-font-set="material-icons">search</md-icon>'+
-                '<input ng-model="$parent.docSearchText" md-autofocus ng-change="docSearch()"/>'+
-              '</md-input-container>'+
-            '</div>'+
-            '<div layout="row" layout-wrap>'+
-              '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in searchDocumentList" ng-click="addDocument(document)">'+
-                '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
-                '<div>{{document.objName}}</div>'+
-              '</div>'+
-            '</div>'+
-          /*'</md-dialog-content>'+
-          '<md-dialog-actions>'+
-            '<md-button ng-click="new()">'+
-              '<md-icon md-font-set="material-icons">add</md-icon>'+
-              '<span>nuevo</span>'+
-            '</md-button>'+
-            '<md-button ng-click="close()">'+
+  var documentDialogTemplate =
+    //'<md-dialog>'+
+      '<form>'+
+        '<md-toolbar>'+
+          '<div class="md-toolbar-tools">'+
+            '<h2 class="md-title">Elegir Documento</h2>'+
+            '<span flex></span>'+
+            '<md-button class="md-icon-button" ng-click="$parent.documentFlag=false">'+
               '<md-icon md-font-set="material-icons">close</md-icon>'+
-              '<span>cerrar</span>'+
             '</md-button>'+
-          '</md-dialog-actions>'+*/
-        '</form>';/*+
-      '</md-dialog>';*/
-
-      var metadataDialogTemplate =
-        //'<md-dialog>'+
-          '<form class="dialog" md-whiteframe="2">'+
-            '<md-toolbar>'+
-              '<div class="md-toolbar-tools">'+
-                '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
-                '<span flex></span>'+
-                '<md-button class="md-icon-button" ng-click="saveMetadata()">'+
-                  '<md-icon md-font-set="material-icons">done</md-icon>'+
-                '</md-button>'+
-                '<md-button class="md-icon-button" ng-click="$parent.metadataFlag=false">'+
-                  '<md-icon md-font-set="material-icons">close</md-icon>'+
-                '</md-button>'+
-              '</div>'+
-            '</md-toolbar>'+
-            //'<md-dialog-content layout="column" layout-padding>'+
-            '<div layout-padding>'+
-              '<h4>Datos Generales</h4>'+
-              '<md-divider></md-divider>'+
-              '<div layout="column" layout-align="start stretch" layout-padding>'+
-                '<md-input-container>'+
-                  '<label>Título</label>'+
-                  '<input ng-model="metadata.objName"/>'+
-                '</md-input-container>'+
-                '<md-input-container>'+
-                  '<label>Descripción</label>'+
-                  '<input ng-model="metadata.objDescription"/>'+
-                '</md-input-container>'+
-              '</div>'+
-              '<h4>Tags</h4>'+
-              '<md-divider></md-divider>'+
-              '<md-chips name="Tags" ng-model="metadata.objTags" placeholder="Agregar Tags" layout-padding>'+
-              '</md-chips>'+
-              '<div ng-if="metadata.objInterface.length">'+
-                '<h4>Tipos Documentales</h4>'+
-                '<md-divider></md-divider>'+
-                '<md-chips ng-model="metadata.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true"  layout-padding>'+
-                  '<md-chip-template>'+
-                    '{{map[$chip].objName}}'+
-                  '</md-chip-template>'+
-                '</md-chips>'+
-              '</div>'+
+          '</div>'+
+        '</md-toolbar>'+
+        //'<md-dialog-content layout="column" layout-padding>'+
+          '<div layout="row" layout-align="center center">'+
+            '<md-input-container>'+
+              '<label>Buscar</label>'+
+              '<md-icon md-font-set="material-icons">search</md-icon>'+
+              '<input ng-model="$parent.docSearchText" md-autofocus ng-change="docSearch()"/>'+
+            '</md-input-container>'+
+          '</div>'+
+          '<div layout="row" layout-wrap>'+
+            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="document in searchDocumentList" ng-click="addDocument(document)">'+
+              '<md-icon md-font-set="material-icons">{{document.objIcon||\'library_books\'}}</md-icon>'+
+              '<div>{{document.objName}}</div>'+
             '</div>'+
-            //'</md-dialog-content>'+
-            /*'<md-dialog-actions>'+
-              '<md-button ng-click="close()">'+
-                '<md-icon md-font-set="material-icons">close</md-icon>'+
-                '<span>cerrar</span>'+
-              '</md-button>'+
-              '<md-button ng-click="save()" class="md-primary">'+
-                '<md-icon md-font-set="material-icons">done</md-icon>'+
-                '<span>Guardar</span>'+
-              '</md-button>'+
-            '</md-dialog-actions>'+*/
-          '</form>'/*+
-        '</md-dialog>'*/;
+          '</div>'+
+        /*'</md-dialog-content>'+
+        '<md-dialog-actions>'+
+          '<md-button ng-click="new()">'+
+            '<md-icon md-font-set="material-icons">add</md-icon>'+
+            '<span>nuevo</span>'+
+          '</md-button>'+
+          '<md-button ng-click="close()">'+
+            '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '<span>cerrar</span>'+
+          '</md-button>'+
+        '</md-dialog-actions>'+*/
+      '</form>';/*+
+    '</md-dialog>';*/
 
+  var metadataDialogTemplate =
+    //'<md-dialog>'+
+      '<form class="dialog" ng-submit="saveMetadata()" md-whiteframe="2">'+
+        '<md-toolbar>'+
+          '<div class="md-toolbar-tools">'+
+            '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
+            '<span flex></span>'+
+            '<md-button class="md-icon-button" ng-click="saveMetadata()">'+
+              '<md-icon md-font-set="material-icons">done</md-icon>'+
+            '</md-button>'+
+            '<md-button class="md-icon-button" ng-click="$parent.metadataFlag=false">'+
+              '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '</md-button>'+
+          '</div>'+
+        '</md-toolbar>'+
+        //'<md-dialog-content layout="column" layout-padding>'+
+        '<div layout-padding>'+
+          '<h4>Datos Generales</h4>'+
+          '<md-divider></md-divider>'+
+          '<div layout="column" layout-align="start stretch" layout-padding>'+
+            '<md-input-container>'+
+              '<label>Título</label>'+
+              '<input ng-model="metadata.objName"/>'+
+            '</md-input-container>'+
+            '<md-input-container>'+
+              '<label>Descripción</label>'+
+              '<input ng-model="metadata.objDescription"/>'+
+            '</md-input-container>'+
+          '</div>'+
+          '<h4>Tags</h4>'+
+          '<md-divider></md-divider>'+
+          '<md-chips name="Tags" ng-model="metadata.objTags" placeholder="Agregar Tags" layout-padding>'+
+          '</md-chips>'+
+          '<div ng-if="metadata.objInterface.length">'+
+            '<h4>Tipos Documentales</h4>'+
+            '<md-divider></md-divider>'+
+            '<md-chips ng-model="metadata.objInterface" name="Interfaces" placeholder="Interfaces" readonly="true"  layout-padding>'+
+              '<md-chip-template>'+
+                '{{map[$chip].objName}}'+
+              '</md-chip-template>'+
+            '</md-chips>'+
+          '</div>'+
+        '</div>'+
+        //'</md-dialog-content>'+
+        /*'<md-dialog-actions>'+
+          '<md-button ng-click="close()">'+
+            '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '<span>cerrar</span>'+
+          '</md-button>'+
+          '<md-button ng-click="save()" class="md-primary">'+
+            '<md-icon md-font-set="material-icons">done</md-icon>'+
+            '<span>Guardar</span>'+
+          '</md-button>'+
+        '</md-dialog-actions>'+*/
+      '</form>'/*+
+    '</md-dialog>'*/;
 
-      var securityDialogTemplate =
-        //'<md-dialog>'+
-          '<form class="dialog" md-whiteframe="2">'+
-            '<md-toolbar>'+
-              '<div class="md-toolbar-tools">'+
-                '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
-                '<span flex></span>'+
-                '<md-button class="md-icon-button" ng-click="saveSecurity()">'+
-                  '<md-icon md-font-set="material-icons">done</md-icon>'+
-                '</md-button>'+
-                '<md-button class="md-icon-button" ng-click="$parent.securityFlag=false">'+
-                  '<md-icon md-font-set="material-icons">close</md-icon>'+
-                '</md-button>'+
-              '</div>'+
-            '</md-toolbar>'+
-            //'<md-dialog-content>'+
-              //'{{security}}'+
-              //'{{$parent.selectedAcl}}'+
-              '<md-tabs md-autoselect md-dynamic-height="true">'+
-                '<md-tab>'+
-                  '<md-tab-label>'+
-                    '<md-icon md-font-set="material-icons">settings</md-icon>'+
-                    '<span style="margin-left: 8px">Opciones Generales</span>'+
-                  '</md-tab-label>'+
-                  '<md-tab-body>'+
-                      '<div layout="column" layout-align="start stretch" layout-padding>'+
-                        '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
-                        '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="$parent.publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
-                      '</div>'+
-                  '</md-tab-body>'+
-                '</md-tab>'+
-                '<md-tab>'+
-                  '<md-tab-label>'+
-                    '<md-icon md-font-set="material-icons">people</md-icon>'+
-                    '<span style="margin-left: 8px">Grupos</span>'+
-                  '</md-tab-label>'+
-                  '<md-tab-body>'+
-                    '<div layout-padding layout="column" flex>'+
-                      '<h4>Propietarios</h4>'+
-                      '<md-chips name="owner" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
-                        '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
-                          '<md-item-template>'+
-                            '{{item.objName}}'+
-                          '</md-item-template>'+
-                        '</md-autocomplete>'+
-                        '<md-chip-template>'+
-                          '{{$chip.objName}}'+
-                        '</md-chip-template>'+
-                      '</md-chips>'+
-                      '<h4>Grupos con Acceso</h4>'+
-                      '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
-                        '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
-                          '<md-item-template>'+
-                            '{{item.objName}}'+
-                          '</md-item-template>'+
-                        '</md-autocomplete>'+
-                        '<md-chip-template>'+
-                          '{{$chip.objName}}'+
-                        '</md-chip-template>'+
-                      '</md-chips>'+
+  var securityDialogTemplate =
+    //'<md-dialog>'+
+      '<form class="dialog" ng-submit="saveSecurity()" md-whiteframe="2">'+
+        '<md-toolbar>'+
+          '<div class="md-toolbar-tools">'+
+            '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
+            '<span flex></span>'+
+            '<md-button class="md-icon-button" ng-click="saveSecurity()">'+
+              '<md-icon md-font-set="material-icons">done</md-icon>'+
+            '</md-button>'+
+            '<md-button class="md-icon-button" ng-click="$parent.securityFlag=false">'+
+              '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '</md-button>'+
+          '</div>'+
+        '</md-toolbar>'+
+        //'<md-dialog-content>'+
+          //'{{security}}'+
+          //'{{$parent.selectedAcl}}'+
+          '<md-tabs md-autoselect md-dynamic-height="true">'+
+            '<md-tab>'+
+              '<md-tab-label>'+
+                '<md-icon md-font-set="material-icons">settings</md-icon>'+
+                '<span style="margin-left: 8px">Opciones Generales</span>'+
+              '</md-tab-label>'+
+              '<md-tab-body>'+
+                  '<div layout="column" layout-align="start stretch" layout-padding>'+
+                    '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
+                    '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="$parent.publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
+                  '</div>'+
+              '</md-tab-body>'+
+            '</md-tab>'+
+            '<md-tab>'+
+              '<md-tab-label>'+
+                '<md-icon md-font-set="material-icons">people</md-icon>'+
+                '<span style="margin-left: 8px">Grupos</span>'+
+              '</md-tab-label>'+
+              '<md-tab-body>'+
+                '<div layout-padding layout="column" flex>'+
+                  '<h4>Propietarios</h4>'+
+                  '<md-chips name="owner" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
+                    '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                      '<md-item-template>'+
+                        '{{item.objName}}'+
+                      '</md-item-template>'+
+                    '</md-autocomplete>'+
+                    '<md-chip-template>'+
+                      '{{$chip.objName}}'+
+                    '</md-chip-template>'+
+                  '</md-chips>'+
+                  '<h4>Grupos con Acceso</h4>'+
+                  '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
+                    '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                      '<md-item-template>'+
+                        '{{item.objName}}'+
+                      '</md-item-template>'+
+                    '</md-autocomplete>'+
+                    '<md-chip-template>'+
+                      '{{$chip.objName}}'+
+                    '</md-chip-template>'+
+                  '</md-chips>'+
+                '</div>'+
+              '</md-tab-body>'+
+            '</md-tab>'+
+            '<md-tab ng-if="$parent.selectedAcl" md-on-deselect="$parent.$parent.selectedAcl=false">'+
+              '<md-tab-label>'+
+                '<md-icon md-font-set="material-icons">verified_user</md-icon>'+
+                '<span style="margin-left: 8px">{{selectedAcl.objName}}</span>'+
+              '</md-tab-label>'+
+              '<md-tab-body>'+
+                '<div layout-padding layout="column" flex>'+
+                  '<md-checkbox ng-model="selectedAcl._acl.write">Edita Metadatos</md-checkbox>'+
+                  '<md-divider></md-divider>'+
+                  '<div>'+
+                    '<h4 class="md-subhead">Configurar para Todas las Propiedades</h4>'+
+                    '<div layout="row" layout-align="start stretch">'+
+                      '<md-checkbox ng-model="$parent.$parent.readAll" ng-change="aclAllChange()">Leer</md-checkbox>'+
+                      '<md-checkbox ng-disabled="!$parent.$parent.readAll" ng-model="$parent.$parent.writeAll" ng-change="aclAllChange()">Escribir</md-checkbox>'+
                     '</div>'+
-                  '</md-tab-body>'+
-                '</md-tab>'+
-                '<md-tab ng-if="$parent.selectedAcl" md-on-deselect="$parent.$parent.selectedAcl=false">'+
-                  '<md-tab-label>'+
-                    '<md-icon md-font-set="material-icons">verified_user</md-icon>'+
-                    '<span style="margin-left: 8px">{{selectedAcl.objName}}</span>'+
-                  '</md-tab-label>'+
-                  '<md-tab-body>'+
-                    '<div layout-padding layout="column" flex>'+
-                      '<md-checkbox ng-model="selectedAcl._acl.write">Edita Metadatos</md-checkbox>'+
-                      '<md-divider></md-divider>'+
-                      '<div>'+
-                        '<h4 class="md-subhead">Configurar para Todas las Propiedades</h4>'+
-                        '<div layout="row" layout-align="start stretch">'+
-                          '<md-checkbox ng-model="$parent.$parent.readAll" ng-change="aclAllChange()">Leer</md-checkbox>'+
-                          '<md-checkbox ng-disabled="!$parent.$parent.readAll" ng-model="$parent.$parent.writeAll" ng-change="aclAllChange()">Escribir</md-checkbox>'+
-                        '</div>'+
-                      '</div>'+
-                      '<md-divider></md-divider>'+
-                      '<div ng-if="!$parent.readAll">'+
-                        '<h4 class="md-subhead">Configurar Propiedades Infividuales del Documento</h4>'+
-                        '<doc-builder-acl-tree acl="selectedAcl._acl.properties" properties="copy"></doc-builder-acl-tree>'+
-                      '</div>'+
-                    '</div>'+
-                  '</md-tab-body>'+
-                '</md-tab>'+
-              '</md-tabs>'+
-            /*'</md-dialog-content>'+
-            '<md-dialog-actions>'+
-              '<md-button ng-click="close()">'+
-                '<md-icon md-font-set="material-icons">close</md-icon>'+
-                '<span>cerrar</span>'+
-              '</md-button>'+
-              '<md-button ng-click="save()" class="md-primary">'+
-                '<md-icon md-font-set="material-icons">done</md-icon>'+
-                '<span>Guardar</span>'+
-              '</md-button>'+
-            '</md-dialog-actions>'+*/
-          '</form>';/*+
-        '</md-dialog>';*/
-
+                  '</div>'+
+                  '<md-divider></md-divider>'+
+                  '<div ng-if="!$parent.readAll">'+
+                    '<h4 class="md-subhead">Configurar Propiedades Infividuales del Documento</h4>'+
+                    '<doc-builder-acl-tree acl="selectedAcl._acl.properties" properties="copy"></doc-builder-acl-tree>'+
+                  '</div>'+
+                '</div>'+
+              '</md-tab-body>'+
+            '</md-tab>'+
+          '</md-tabs>'+
+        /*'</md-dialog-content>'+
+        '<md-dialog-actions>'+
+          '<md-button ng-click="close()">'+
+            '<md-icon md-font-set="material-icons">close</md-icon>'+
+            '<span>cerrar</span>'+
+          '</md-button>'+
+          '<md-button ng-click="save()" class="md-primary">'+
+            '<md-icon md-font-set="material-icons">done</md-icon>'+
+            '<span>Guardar</span>'+
+          '</md-button>'+
+        '</md-dialog-actions>'+*/
+      '</form>';/*+
+    '</md-dialog>';*/
 
   var treeTemplate =
     '<md-list flex ng-switch="schema.type" layout="column">'+
@@ -338,7 +336,7 @@
     '</div>';
 
   var template=
-    '<form name="mainForm" ng-if="!isChild" md-whiteframe="2" layout-padding>'+
+    '<form name="mainForm" md-whiteframe="2" layout-padding>'+
       '<div layout="column" layout-align="center stretch" flex layout-padding>'+
         '<div layout="row" flex layout-align="start center">'+
           '<div ng-repeat="level in stack" layout="row" layout-align="start center">'+
@@ -348,16 +346,22 @@
           '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
           '<span flex></span>'+
           //'{{copy}}'+
-          '<md-button class="md-icon-button" ng-click="doSave(mainForm)">'+
-            '<md-icon md-font-set="material-icons">{{stack.length?\'done_all\':\'done\'}}</md-icon>'+
+          '<md-button class="md-icon-button" ng-if="!locked" ng-click="$parent.locked=true">'+
+            '<md-icon md-font-set="material-icons">lock</md-icon>'+
           '</md-button>'+
-          '<md-button class="md-icon-button" ng-click="doCancel()">'+
-            '<md-icon md-font-set="material-icons">{{stack.length?\'arrow_back\':\'clear\'}}</md-icon>'+
+          '<md-button class="md-icon-button" ng-if="!locked" ng-click="goBack()">'+
+            '<md-icon md-font-set="material-icons">arrow_back</md-icon>'+
           '</md-button>'+
-          '<md-button class="md-icon-button" ng-click="editMetadata($event)">'+
+          '<md-button class="md-icon-button" ng-if="locked" ng-click="doSave(mainForm)">'+
+            '<md-icon md-font-set="material-icons">done</md-icon>'+
+          '</md-button>'+
+          '<md-button class="md-icon-button" ng-if="locked" ng-click="doCancel()">'+
+            '<md-icon md-font-set="material-icons">clear</md-icon>'+
+          '</md-button>'+
+          '<md-button class="md-icon-button" ng-if="locked" ng-click="editMetadata($event)">'+
             '<md-icon md-font-set="material-icons">edit</md-icon>'+
           '</md-button>'+
-          '<md-button class="md-icon-button" ng-click="editSecurity($event)">'+
+          '<md-button class="md-icon-button" ng-if="locked" ng-click="editSecurity($event)">'+
             '<md-icon md-font-set="material-icons">security</md-icon>'+
           '</md-button>'+
         '</div>'+
@@ -369,16 +373,16 @@
         '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
         '<md-tab-body>'+
           '<md-tab-content flex layout="column">'+
-            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit" interface="map[interface]"></doc-builder-tab>'+
+            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]"></doc-builder-tab>'+
           '</md-tab-content>'+
         '</md-tab-body>'+
       '</md-tab>'+
       '<md-tab label="base">'+
         '<md-tab-content flex layout="column">'+
-          '<doc-builder-tab flex layout="column" ng-model="copy" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>'+
+          '<doc-builder-tab flex layout="column" ng-model="copy" edit="edit && locked" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>'+
         '</md-tab-content>'+
       '</md-tab>'+
-      '<md-tab flex>'+
+      '<md-tab ng-disabled="!locked" flex>'+
         '<md-tab-label><md-icon md-font-set="material-icons">library_add</md-icon></md-tab-label>'+
         '<md-tab-body>'+interfaceDialogTemplate+'</md-tab-body>'+
       '</md-tab>'+
@@ -511,6 +515,7 @@
       },
       controller: function($scope, $mdToast, $mdDialog, $filter, $q) {
         if(!$scope.interfaces) $scope.interfaces=[];
+        $scope.locked = false;
         $scope.stack = [];
         $scope.selectedAcl = null;
         $scope.readAll = false;
@@ -614,36 +619,19 @@
           }
         };
 
-        $scope.doCancel = function() {
+        $scope.goBack = function(){
           if(!$scope.stack.length) return $scope.done({canceled: true});
           $scope.$emit('docBuilder:backStack');
+        };
+
+        $scope.doCancel = function() {
+          $scope.copy = angular.merge({objName: 'Sin Título'}, $scope.ngModel);
+          $scope.locked = false;
         };
 
         $scope.addInterface = function(iface) {
           if(!$scope.copy.objInterface) $scope.copy.objInterface = [];
           $scope.copy.objInterface.push(iface._id);
-          /*$mdDialog.show({
-            template: interfaceDialogTemplate,
-            targetEvent: $event,
-            locals: {
-              interfaces: $scope.implementable
-            },
-            clickOutsideToClose: true,
-            controller: function($scope, $mdDialog, interfaces) {
-              $scope.interfaces = interfaces;
-              $scope.add = function(iface) {
-                $mdDialog.hide(iface);
-              };
-              $scope.close = function() {
-                $mdDialog.cancel();
-              };
-            }
-          })
-          .then(function(iface) {
-            if(!$scope.copy.objInterface) $scope.copy.objInterface=[];
-            $scope.copy.objInterface.push(iface._id);
-            $scope.selectInterface(iface._id);
-          });*/
         };
 
         $scope.saveMetadata = function() {
@@ -657,29 +645,6 @@
             $scope.securityFlag = false;
             $scope.metadata = angular.merge({objTags: [], objInterface: []}, $scope.copy);
           }
-
-          /*$mdDialog.show({
-            template: metadataDialogTemplate,
-            targetEvent: $event,
-            locals: {
-              model: $scope.copy,
-              map: $scope.map
-            },
-            clickOutsideToClose: true,
-            controller: function($scope, $mdDialog, model, map) {
-              $scope.model = angular.merge({objTags: [], objInterface: []}, model);
-              $scope.map = map;
-              $scope.save = function() {
-                $mdDialog.hide($scope.model);
-              };
-              $scope.close = function() {
-                $mdDialog.cancel();
-              };
-            }
-          })
-          .then(function(edited) {
-            $scope.copy = edited;
-          });*/
         };
 
         $scope.togglePublicRead = function() {
@@ -736,64 +701,6 @@
               });
             }
           }
-          /*$mdDialog.show({
-            template: securityDialogTemplate,
-            targetEvent: $event,
-            locals: {
-              parent: $scope
-            },
-            clickOutsideToClose: true,
-            controller: function($scope, $mdDialog, $q, parent) {
-              var osunwatch = parent.$watch('copy.objSecurity', function(newVal, oldVal) {
-                $scope.security = angular.merge({}, newVal);
-                $scope.inmubable = !!newVal.inmubable;
-                $scope.owner = [];
-                if(!(newVal||{}).owner || !newVal.owner.length) return;
-                parent.$emit('docBuilder:search', {_id: {$in: newVal.owner}}, function(err, list) {
-                  if(!err) $scope.owner = list;
-                });
-              });
-
-              $scope.$on('$destroy', osunwatch);
-
-              $scope.togglePublicRead = function() {
-                if(!$scope.security.acl) $scope.security.acl = {};
-                if($scope.publicRead) {
-                  $scope.security.acl['group:public'] = {write: false};
-                } else {
-                  delete $scope.security.acl['group:public'];
-                }
-              };
-
-              $scope.getOwners = function(search) {
-                var filter = {
-                  objName: {$regex: search, $options: 'i'},
-                  objInterface: parent.nMap.GroupInterface._id
-                };
-                return $q(function(resolve, reject) {
-                  parent.$emit('docBuilder:search', filter, function(err, list) {
-                    if(err) return reject(err);
-                    var oid = $scope.owner.map(function(owner) {
-                      return owner._id;
-                    });
-                    resolve(list.filter(function(item) {
-                      return !oid.includes(item._id);
-                    }));
-                  });
-                });
-              };
-
-              $scope.save = function() {
-                $mdDialog.hide($scope.security);
-              };
-              $scope.close = function() {
-                $mdDialog.cancel();
-              };
-            }
-          })
-          .then(function(security) {
-            $scope.copy.objSecurity = security;
-          });*/
         };
 
         $scope.selectInterface = function(iface) {
@@ -841,9 +748,10 @@
         });
 
         $scope.$on('docBuilder:addStack', function($event, selected, model) {
-          $scope.stack.push({copy: $scope.copy, selectedInterface: $scope.selectedInterface, selected: selected});
+          $scope.stack.push({copy: $scope.copy, selectedInterface: $scope.selectedInterface, selected: selected, locked: $scope.locked});
           $scope.copy = model;
           $scope.selectedInterface = model.objInterface&&model.objInterface[0]||null;
+          $scope.locked = false;
         });
 
         $scope.$on('docBuilder:backStack', function($event, value) {
@@ -851,6 +759,7 @@
           var level = $scope.stack.pop();
           $scope.copy = level.copy;
           $scope.selectedInterface = level.selectedInterface;
+          $scope.locked = level.locked;
           if(value) {
             level.selected.parent[level.selected.key] = value;
           }

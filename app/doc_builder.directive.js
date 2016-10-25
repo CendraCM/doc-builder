@@ -89,7 +89,7 @@
       '<form class="dialog" ng-submit="saveMetadata()" md-whiteframe="2">'+
         '<md-toolbar>'+
           '<div class="md-toolbar-tools">'+
-            '<h2 class="md-title">Editar Metadatos del Documento</h2>'+
+            '<h2 class="md-title">Editar Metadatos del {{isSchema()?"Tipo Documental":"Documento"}}</h2>'+
             '<span flex></span>'+
             '<md-button class="md-icon-button" ng-click="saveMetadata()">'+
               '<md-icon md-font-set="material-icons">done</md-icon>'+
@@ -146,7 +146,7 @@
       '<form class="dialog" ng-submit="saveSecurity()" md-whiteframe="2">'+
         '<md-toolbar>'+
           '<div class="md-toolbar-tools">'+
-            '<h2 class="md-title">Editar Seguridad del Documento</h2>'+
+            '<h2 class="md-title">Editar Seguridad del {{isSchema()?"Tipo Documental":"Documento"}}</h2>'+
             '<span flex></span>'+
             '<md-button class="md-icon-button" ng-click="saveSecurity()">'+
               '<md-icon md-font-set="material-icons">done</md-icon>'+
@@ -167,7 +167,7 @@
               '</md-tab-label>'+
               '<md-tab-body>'+
                   '<div layout="column" layout-align="start stretch" layout-padding>'+
-                    '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.inmutable">¿El documento es inmutable?</md-checkbox>'+
+                    '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.inmutable">¿El {{isSchema()?"tipo documental":"documento"}} es inmutable?</md-checkbox>'+
                     '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="$parent.publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
                   '</div>'+
               '</md-tab-body>'+
@@ -181,7 +181,7 @@
                 '<div layout-padding layout="column" flex>'+
                   '<h4>Propietarios</h4>'+
                   '<md-chips name="owner" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
-                    '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                    '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                       '<md-item-template>'+
                         '{{item.objName}}'+
                       '</md-item-template>'+
@@ -192,7 +192,7 @@
                   '</md-chips>'+
                   '<h4>Grupos con Acceso</h4>'+
                   '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
-                    '<md-autocomplete md-no-cache="true" md-items="item in getGroups(searchText)"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                    '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\', \'acl\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                       '<md-item-template>'+
                         '{{item.objName}}'+
                       '</md-item-template>'+
@@ -201,6 +201,19 @@
                       '{{$chip.objName}}'+
                     '</md-chip-template>'+
                   '</md-chips>'+
+                  '<div ng-if="isSchema()">'+
+                    '<h4>Grupos que pueden Implementar</h4>'+
+                    '<md-chips name="acl" placeholder="Agregar Implementadores" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="implementable" md-require-match="true">'+
+                      '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, add: {any: \'Todos\', system: \'Sistema\', root: \'Administrador\', iadmin: \'Administrador de Interfaces\'}, filter: [\'owner\', \'implementable\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                        '<md-item-template>'+
+                          '{{item.objName}}'+
+                        '</md-item-template>'+
+                      '</md-autocomplete>'+
+                      '<md-chip-template>'+
+                        '{{$chip.objName}}'+
+                      '</md-chip-template>'+
+                    '</md-chips>'+
+                  '</div>'+
                 '</div>'+
               '</md-tab-body>'+
             '</md-tab>'+
@@ -373,7 +386,7 @@
         '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
         '<md-tab-body>'+
           '<md-tab-content flex layout="column">'+
-            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]"></doc-builder-tab>'+
+            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]" is-schema="isSchema()"></doc-builder-tab>'+
           '</md-tab-content>'+
         '</md-tab-body>'+
       '</md-tab>'+
@@ -506,22 +519,35 @@
       restrict: 'E',
       template: template,
       scope: {
-        ngModel: '=',
+        ngModel: '=?',
         edit: '<?',
         done: '&',
         search: '&?',
         interfaces: '=?',
-        implementable: '=?'
+        implementable: '=?',
+        schema: '=?'
       },
       controller: function($scope, $mdToast, $mdDialog, $filter, $q) {
         if(!$scope.interfaces) $scope.interfaces=[];
-        $scope.locked = false;
         $scope.stack = [];
         $scope.selectedAcl = null;
         $scope.readAll = false;
         $scope.writeAll = false;
+
+        $scope.isSchema = function() {
+          return !$scope.ngModel && $scope.schema;
+        };
+
         $scope.$watchCollection('ngModel', function(value) {
+          if($scope.isSchema()) return;
           $scope.copy = angular.merge({objName: 'Sin Título'}, value);
+          $scope.locked = !value._id;
+        });
+
+        $scope.$watchCollection('schema', function(value) {
+          if(!$scope.isSchema()) return;
+          $scope.copy = angular.merge({objName: 'Sin Título'}, value);
+          $scope.locked = !value._id;
         });
 
         $scope.$watchCollection('copy.objInterface', function(value) {
@@ -587,8 +613,6 @@
         };
 
         $scope.doSave = function(mainForm) {
-/*          mainForm.documentName.$setDirty();
-          mainForm.documentName.$setTouched();*/
           if(isEmpty($scope.copy.objName)) {
             return $mdToast.showSimple('Debe Proporcionar un Nombre para el Documento.');
           }
@@ -596,7 +620,7 @@
             return $mdToast.showSimple('El documento no puede estar vacío.');
           }
           var error;
-          $scope.copy.objInterface && $scope.copy.objInterface.forEach(function(interfaceId) {
+          !$scope.isSchema() && $scope.copy.objInterface && $scope.copy.objInterface.forEach(function(interfaceId) {
             if(error) return;
             if((error = failConstraints($scope.copy[$scope.getName(interfaceId).key], $scope.map[interfaceId]))) {
               $scope.selectInterface(interfaceId);
@@ -605,11 +629,12 @@
             }
           });
           if(error) return;
-          if(!$scope.stack.length) {
-            for(var i in $scope.ngModel) {
-              delete $scope.ngModel[i];
+          if($scope.isSchema() || !$scope.stack.length) {
+            var e = $scope.isSchema()?$scope.schema:$scope.ngModel;
+            for(var i in e) {
+              delete e[i];
             }
-            angular.copy($scope.copy, $scope.ngModel);
+            angular.copy($scope.copy, e);
             $scope.done({canceled: false});
           } else {
             $scope.done({canceled: false, doc: $scope.copy})
@@ -620,12 +645,14 @@
         };
 
         $scope.goBack = function(){
-          if(!$scope.stack.length) return $scope.done({canceled: true});
+          if($scope.isSchema() || !$scope.stack.length) return $scope.done({canceled: true});
           $scope.$emit('docBuilder:backStack');
         };
 
         $scope.doCancel = function() {
-          $scope.copy = angular.merge({objName: 'Sin Título'}, $scope.ngModel);
+          var e = $scope.isSchema()?$scope.schema:$scope.ngModel;
+          if(!e._id) return $scope.goBack();
+          $scope.copy = angular.merge({objName: 'Sin Título'}, e);
           $scope.locked = false;
         };
 
@@ -658,28 +685,44 @@
           }
         };
 
-        $scope.getGroups = function(search) {
+        $scope.getGroups = function(ops) {
           var filter = {
-            objName: {$regex: search, $options: 'i'},
+            objName: {$regex: ops.searchText, $options: 'i'},
             objInterface: $scope.nMap.GroupInterface._id
           };
           return $q(function(resolve, reject) {
             $scope.$emit('docBuilder:search', filter, function(err, list) {
               if(err) return reject(err);
-              var oid = $scope.owner.map(function(owner) {
-                return owner._id;
-              });
+              if(ops.add) {
+                for(var i in ops.add) {
+                  list.push({_id: i, objName: ops.add[i]});
+                }
+              }
+              var filterList = [];
+              if(ops.filter) {
+                filterList = ops.filter.reduce(function(memo, key) {
+                  var ids = $scope[key].map(function(element) {
+                    return element._id;
+                  });
+                  return memo.concat(ids);
+                }, []);
+              }
               resolve(list.filter(function(item) {
-                return !oid.includes(item._id);
+                return !filterList.includes(item._id);
               }));
             });
           });
+        };
+
+        $scope.impReserveWords = function() {
+
         };
 
         $scope.editSecurity = function($event) {
           $scope.securityFlag = !$scope.securityFlag;
           $scope.owner=[];
           $scope.acl=[];
+          $scope.implementable=[];
           if($scope.securityFlag) {
             $scope.metadataFlag = false;
             $scope.security = angular.merge({}, $scope.copy.objSecurity);
@@ -699,6 +742,9 @@
                   $scope.acl.push(d);
                 });
               });
+            }
+            if(!isEmpty($scope.security.implementable)) {
+
             }
           }
         };
@@ -780,7 +826,8 @@
         interface: '=',
         interfaceList: '=',
         edit: '<?',
-        intNames: "="
+        intNames: '=',
+        isSchema: '<'
       },
       template: tabTemplate,
       compile: function() {
@@ -858,37 +905,6 @@
 
         $scope.selectDocument = function($event) {
           $scope.documentFlag = !$scope.documentFlag;
-          /*var self = $scope;
-          $mdDialog.show({
-            template: documentDialogTemplate,
-            targetEvent: $event,
-            clickOutsideToClose: true,
-            controller: function($scope, $mdDialog, interfaces) {
-              $scope.interfaces = interfaces;
-              $scope.add = function(doc) {
-                $mdDialog.hide(doc);
-              };
-              $scope.new = function(doc) {
-                $mdDialog.hide();
-              };
-              $scope.close = function() {
-                $mdDialog.cancel();
-              };
-              $scope.doSearch = function() {
-                if(!$scope.search.length) return ($scope.documentList=[]);
-                var filter = {
-                  objName: {$regex: $scope.search, $options: 'i'}
-                };
-                self.$emit('docBuilder:search', filter, function(err, list) {
-                  $scope.documentList = list;
-                });
-              };
-            }
-          })
-          .then(function(doc) {
-            if(doc) return ($scope.selected.parent[$scope.selected.key] = doc._id);
-            $scope.$emit('docBuilder:addStack', $scope.selected, {objName: 'Sin Título'});
-          });*/
         };
 
         $scope.editDocument = function() {

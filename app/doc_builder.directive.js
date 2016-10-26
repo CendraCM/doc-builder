@@ -168,7 +168,7 @@
               '<md-tab-body>'+
                   '<div layout="column" layout-align="start stretch" layout-padding>'+
                     '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.inmutable">¿El {{isSchema()?"tipo documental":"documento"}} es inmutable?</md-checkbox>'+
-                    '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="$parent.publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
+                    '<md-checkbox ng-disabled="copy.objSecurity.inmutable" ng-model="security.publicRead" ng-change="togglePublicRead()">¿Es público para leer?</md-checkbox>'+
                   '</div>'+
               '</md-tab-body>'+
             '</md-tab>'+
@@ -180,7 +180,7 @@
               '<md-tab-body>'+
                 '<div layout-padding layout="column" flex>'+
                   '<h4>Propietarios</h4>'+
-                  '<md-chips name="owner" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="owner" md-require-match="true" md-removable="owner.length > 1">'+
+                  '<md-chips name="owner" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._owner" md-require-match="true" md-removable="owner.length > 1">'+
                     '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                       '<md-item-template>'+
                         '{{item.objName}}'+
@@ -191,7 +191,7 @@
                     '</md-chip-template>'+
                   '</md-chips>'+
                   '<h4>Grupos con Acceso</h4>'+
-                  '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="acl" md-require-match="true">'+
+                  '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._acl" md-require-match="true">'+
                     '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\', \'acl\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                       '<md-item-template>'+
                         '{{item.objName}}'+
@@ -203,8 +203,8 @@
                   '</md-chips>'+
                   '<div ng-if="isSchema()">'+
                     '<h4>Grupos que pueden Implementar</h4>'+
-                    '<md-chips name="acl" placeholder="Agregar Implementadores" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="implementable" md-require-match="true">'+
-                      '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, add: {any: \'Todos\', system: \'Sistema\', root: \'Administrador\', iadmin: \'Administrador de Interfaces\'}, filter: [\'owner\', \'implementable\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
+                    '<md-chips name="acl" placeholder="Agregar Implementadores" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._implementable" md-require-match="true">'+
+                      '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, add: getImplementableReserveWords(), filter: [\'owner\', \'implementable\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                         '<md-item-template>'+
                           '{{item.objName}}'+
                         '</md-item-template>'+
@@ -695,13 +695,13 @@
               if(err) return reject(err);
               if(ops.add) {
                 for(var i in ops.add) {
-                  list.push({_id: i, objName: ops.add[i]});
+                  if(new RegExp(ops.searchText, 'i').test(ops.add[i])) list.push({_id: i, objName: ops.add[i]});
                 }
               }
               var filterList = [];
               if(ops.filter) {
                 filterList = ops.filter.reduce(function(memo, key) {
-                  var ids = $scope[key].map(function(element) {
+                  var ids = $scope.security['_'+key].map(function(element) {
                     return element._id;
                   });
                   return memo.concat(ids);
@@ -714,38 +714,67 @@
           });
         };
 
-        $scope.impReserveWords = function() {
-
+        $scope.getImplementableReserveWords = function() {
+          return {any: 'Todos', system: 'Sistema', root: 'Administrador', iadmin: 'Administrador de Interfaces'};
         };
 
         $scope.editSecurity = function($event) {
           $scope.securityFlag = !$scope.securityFlag;
-          $scope.owner=[];
-          $scope.acl=[];
-          $scope.implementable=[];
           if($scope.securityFlag) {
             $scope.metadataFlag = false;
             $scope.security = angular.merge({}, $scope.copy.objSecurity);
-            if((($scope.security||{}).owner||[]).length) {
+            $scope.security._owner=[];
+            $scope.security._acl=[];
+            if(!isEmpty($scope.security.owner)) {
               $scope.$emit('docBuilder:search', {_id: {$in: $scope.security.owner}}, function(err, list) {
-                if(!err) $scope.owner = list;
+                if(!err) $scope.security._owner = list;
               });
             }
             if(!isEmpty($scope.security.acl)) {
-              if($scope.security.acl['group:public']) $scope.acl.push({_id: 'group:public', objName: 'Público', _acl: $scope.security.acl['group:public']});
+              if($scope.security.acl['group:public']) $scope.security._acl.push({_id: 'group:public', objName: 'Público', _acl: $scope.security.acl['group:public']});
               var ids = Object.keys($scope.security.acl).filter(function(k){
                 return k!='group:public';
               });
               if(ids.length) $scope.$emit('docBuilder:search', {_id: {$in: ids}}, function(err, list) {
                 if(!err) list.forEach(function(d) {
                   d._acl = $scope.security.acl[d._id];
-                  $scope.acl.push(d);
+                  $scope.security._acl.push(d);
                 });
               });
             }
-            if(!isEmpty($scope.security.implementable)) {
-
+            if($scope.isSchema()) {
+              var rw = $scope.getImplementableReserveWords();
+              $scope.security._implementable=($scope.security.implementable||[]).filter(function(impId) {
+                return !!rw[impId];
+              }).map(function(impId) {
+                return {_id: impId, objName: rw[impId]};
+              });
+              var ids = ($scope.security.implementable||[]).filter(function(k){
+                return !rw[k];
+              });
+              if(ids.length) $scope.$emit('docBuilder:search', {_id: {$in: ids}}, function(err, list) {
+                if(!err) list.forEach(function(d) {
+                  $scope.security._implementable.push(d);
+                });
+              });
             }
+          }
+        };
+
+        $scope.saveSecurity = function() {
+          $scope.securityFlag = false;
+          $scope.copy.objSecurity.owner = $scope.security._owner.map(function(owner) {
+            return owner._id;
+          });
+          $scope.copy.objSecurity.inmutable = $scope.security.inmutable;
+          $scope.copy.objSecurity.acl = {};
+          $scope.security._acl.forEach(function(acl) {
+            $scope.copy.objSecurity.acl[acl._id] = acl._acl;
+          });
+          if($scope.isSchema()) {
+            $scope.copy.objSecurity.implementable = $scope.security._implementable.map(function(impl) {
+              return impl._id;
+            });
           }
         };
 

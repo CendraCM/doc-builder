@@ -77,3 +77,11 @@ doc-builder .offset-right {
 .layout-padding > doc-builder-acl-tree {
   padding: 0px;
 }
+
+.layout-row > md-checkbox {
+  margin-bottom: 0px;
+}
+
+.layout-row > md-input-container > .md-errors-spacer {
+  min-height: 0px;
+}

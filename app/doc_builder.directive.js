@@ -438,7 +438,7 @@
     '<doc-builder-tab flex layout="column" ng-model="copy" ng-show="!selectedInterface" edit="edit" interfaceList="interfaces" int-names="intNames"></doc-builder-tab>'*/;
 
 
-    function deepCompare () {
+  var deepCompare = function() {
     var i, l, leftChain, rightChain;
 
     function compare2Objects (x, y) {
@@ -595,7 +595,7 @@
   };
 
   function buildDocument(schema) {
-    var document = null;
+    var document = getType(schema.default)=='undefined'?null:schema.default;
     switch(schema.type) {
       case 'array':
         document = [];
@@ -787,7 +787,7 @@
 
         $scope.addInterface = function(iface) {
           if(!$scope.copy.objInterface) $scope.copy.objInterface = [];
-          $scope.copy.objInterface.push(iface._id);
+          if(!$scope.copy.objInterface.includes(iface._id))$scope.copy.objInterface.push(iface._id);
         };
 
         $scope.saveMetadata = function() {
@@ -931,6 +931,26 @@
 
         $scope.$on('docBuilder:search', function($event, filter, cb) {
           $event.stopPropagation();
+          var replace = function(element) {
+            switch (getType(element)) {
+              case "object":
+                for(var i in element) {
+                  if(i == "docBuilder:iface:convert") {
+                    return $scope.nMap[element[i]]._id;
+                  } else {
+                    element[i] = replace(element[i]);
+                  }
+                }
+                break;
+              case "array":
+                element.forEach(function(e, i) {
+                  element[i] = replace(e);
+                });
+            }
+            return element;
+          };
+          filter = replace(filter);
+          console.log(filter);
           $scope.search({filter: filter})
             .then(function(list) {
               cb(null, list);
@@ -1014,7 +1034,7 @@
             $scope.schema = buildSchema(value);
           }
           if(!$scope.schema) $scope.schema = {type: 'object'};
-          if(!$scope.selected||$scope.selected.root) $scope.$emit('docBuilder:select', (value.objInterface&&value.objInterface.length&&value.objInterface[0])||null);
+          if(!$scope.selected||$scope.selected.root) $scope.$emit('docBuilder:select', null);
         });
 
         $scope.$on('docBuilder:select', function($event, value, dblck) {
@@ -1092,6 +1112,28 @@
           var filter = {
             objName: {$regex: $scope.docSearchText, $options: 'i'}
           };
+          if($scope.selectedSchema.objImplements) {
+            var oi = $scope.selectedSchema.objImplements;
+            switch(getType(oi)) {
+              case "string":
+                filter.objInterface = {'docBuilder:iface:convert': oi};
+                break;
+              case "array":
+                filter.objInterface = {$in: oi.map(function(imp) {
+                  return {'docBuilder:iface:convert': imp};
+                })};
+                break;
+              case "object":
+                if(oi.name) filter.objInterface = {'docBuilder:iface:convert': oi.name};
+                else if(oi.any) filter.objInterface = {$in: oi.any.map(function(imp) {
+                  return {'docBuilder:iface:convert': imp};
+                })};
+                else if(oi.all) filter.objInterface = {$elemMatch: oi.all.map(function(imp) {
+                  return {$in: [{'docBuilder:iface:convert': imp}]};
+                })};
+                break;
+            }
+          }
           $scope.$emit('docBuilder:search', filter, function(err, list) {
             $scope.searchDocumentList = list;
           });

@@ -29,7 +29,7 @@
             '</md-input-container>'+
           '</div>'+
           '<div layout="row" layout-wrap>'+
-            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in implementable|filter:ifaceSearch" ng-click="addInterface(interface)">'+
+            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in interfaces|filter:ifaceSearch" ng-click="select({iface: interface})">'+
               '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
               '<div>{{interface.objName}}</div>'+
             '</div>'+
@@ -272,7 +272,8 @@
     '</md-list>';
 
   var tabTemplate =
-    '<doc-builder-tree flex layout="column" types="types" ng-if="!hideTab && !documentFlag" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected" is-schema="isSchema"></doc-builder-tree>'+
+    '<doc-builder-tree flex layout="column" types="types" ng-if="!hideTab && !documentFlag && !selectInterfaceFlag" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected" is-schema="isSchema"></doc-builder-tree>'+
+    '<doc-builder-iface-selector ng-if="selectInterfaceFlag" interfaces="implementable" select="addInterface(iface)"></doc-builder-iface-selector>'+
     '<form ng-submit="doAction()" ng-if="edit && !hideTab && !documentFlag" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding layout-align="start center">'+
         '<md-input-container ng-if="!selected.root&&!interface&&selected.schema.type == \'object\'">'+
@@ -411,7 +412,7 @@
       '</md-tab>'+
       '<md-tab ng-disabled="!locked" ng-if="!isSchema()" flex>'+
         '<md-tab-label><md-icon md-font-set="material-icons">library_add</md-icon></md-tab-label>'+
-        '<md-tab-body>'+interfaceDialogTemplate+'</md-tab-body>'+
+        '<md-tab-body><doc-builder-iface-selector interfaces="implementable" select="addInterface(iface)"></doc-builder-iface-selector></md-tab-body>'+
       '</md-tab>'+
     '</md-tabs>'+
     '<div ng-if="metadataFlag">'+
@@ -779,7 +780,7 @@
         };
 
         $scope.doCancel = function() {
-          var e = $scope.isSchema()?$scope.schema:$scope.ngModel;
+          var e = $scope.isSchema()?$scope.schema:($scope.stack.length?$scope.stack[$scope.stack.length-1].model:$scope.ngModel);
           if(!e._id) return $scope.goBack();
           $scope.copy = angular.merge({objName: 'Sin Título'}, e);
           $scope.locked = false;
@@ -972,7 +973,7 @@
         });
 
         $scope.$on('docBuilder:addStack', function($event, selected, model) {
-          $scope.stack.push({copy: $scope.copy, selectedInterface: $scope.selectedInterface, selected: selected, locked: $scope.locked});
+          $scope.stack.push({copy: $scope.copy, selectedInterface: $scope.selectedInterface, selected: selected, locked: $scope.locked, model: model});
           $scope.copy = model;
           $scope.selectedInterface = model.objInterface&&model.objInterface[0]||null;
           $scope.locked = false;
@@ -1411,6 +1412,16 @@
           if(acl.read) return $scope.acl[acl.path] = acl.write;
           delete $scope.acl[acl.path];
         };
+      }
+    };
+  })
+  .directive('docBuilderIfaceSelector', function() {
+    return {
+      restrict: 'E',
+      template: interfaceDialogTemplate,
+      scope: {
+        interfaces:'=',
+        select: '&'
       }
     };
   });

@@ -191,7 +191,7 @@
                     '</md-chip-template>'+
                   '</md-chips>'+
                   '<h4>Grupos con Acceso</h4>'+
-                  '<md-chips name="acl" md-on-add="$chip._acl={write:false}" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._acl" md-require-match="true">'+
+                  '<md-chips name="acl" md-on-add="addInterface($chip)" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._acl" md-require-match="true">'+
                     '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\', \'acl\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                       '<md-item-template>'+
                         '{{item.objName}}'+
@@ -273,7 +273,7 @@
 
   var tabTemplate =
     '<doc-builder-tree flex layout="column" types="types" ng-if="!hideTab && !documentFlag && !selectInterfaceFlag" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected" is-schema="isSchema"></doc-builder-tree>'+
-    '<doc-builder-iface-selector ng-if="selectInterfaceFlag" interfaces="implementable" select="addInterface(iface)"></doc-builder-iface-selector>'+
+    '<doc-builder-iface-selector ng-if="selectInterfaceFlag" interfaces="interfaceList" select="addInterface(iface)"></doc-builder-iface-selector>'+
     '<form ng-submit="doAction()" ng-if="edit && !hideTab && !documentFlag" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding layout-align="start center">'+
         '<md-input-container ng-if="!selected.root&&!interface&&selected.schema.type == \'object\'">'+
@@ -353,6 +353,19 @@
         '</md-checkbox>'+
         '<md-button class="md-raised" ng-click="editDocument($event)" ng-if="selectedSchema.objImplements && selected.parent[selected.key]">Editar Documento</md-button>'+
         '<md-button class="md-raised" ng-click="selectDocument($event)" ng-if="selectedSchema.objImplements">{{selected.parent[selected.key]?\'Cambiar\':\'Seleccionar\'}} Documento</md-button>'+
+        '<md-checkbox ng-disabled="selected.root || interface" ng-if="selectedSchema.type == \'string\'">'+
+          '<input ng-model="selected._doImplement" ng-change="changeKey()" required/>'+
+        '</md-checkbox>'+
+        '<md-chips name="owner" placeholder="Interfaces" ng-if="selected._doImplement" md-autocomplete-snap readonly="selected.root || interface" ng-model="selected._implements" md-require-match="true">'+
+          '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
+            '<md-item-template>'+
+              '{{item.objName}}'+
+            '</md-item-template>'+
+          '</md-autocomplete>'+
+          '<md-chip-template>'+
+            '{{$chip.objName}}'+
+          '</md-chip-template>'+
+        '</md-chips>'+
         '<span flex></span>'+
         '<md-button ng-if="!selected.root && !selectedSchema.required" class="md-icon-button" ng-click="delete()">'+
           '<md-icon md-font-set="material-icons">delete</md-icon>'+
@@ -401,7 +414,7 @@
         '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
         '<md-tab-body>'+
           '<md-tab-content flex layout="column">'+
-            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]"></doc-builder-tab>'+
+            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]" interfaceList="interfaces"></doc-builder-tab>'+
           '</md-tab-content>'+
         '</md-tab-body>'+
       '</md-tab>'+
@@ -1106,6 +1119,12 @@
                 });
               }
           }
+        };
+
+
+        $scope.addInterface = function(iface) {
+          /*if(!$scope.copy.objInterface) $scope.copy.objInterface = [];
+          if(!$scope.copy.objInterface.includes(iface._id))$scope.copy.objInterface.push(iface._id);*/
         };
 
         $scope.docSearch = function() {

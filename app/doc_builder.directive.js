@@ -261,7 +261,19 @@
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
         //'{{item}}'+
         '<div layout="row" flex layout-align="start center" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}" ng-click="select(item.key)" ng-dblclick="select(item.key, true)">'+
-          '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item.schema.type].icon}}</md-icon>'+
+          '<md-menu>'+
+            '<md-button class="md-icon-button" ng-disabled="item.schema.objImplements" ng-click="$mdOpenMenu()">'+
+              '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item.schema.type].icon}}</md-icon>'+
+            '</md-button>'+
+            '<md-menu-content>'+
+              '<md-menu-item ng-repeat="(key, type) in types">'+
+                '<md-button ng-click="item.schema.type = key">'+
+                  '<md-icon md-font-set="material-icons">{{type.icon}}</md-icon>'+
+                  '<span>{{type.desc}}</span>'+
+                '</md-button>'+
+              '</md-menu-item>'+
+            '</md-menu-content>'+
+          '</md-menu>'+
           '<span class="lbl" layout-padding>{{item.label}}:</span>'+
           '<span flex layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree && !isSchema">{{(item.item.toISOString?item.item.toISOString():item.item)|docName:item.implements:getDocument}}</span>'+
           '<span flex ng-if="item.tree && !isSchema"></span>'+
@@ -353,9 +365,7 @@
         '</md-checkbox>'+
         '<md-button class="md-raised" ng-click="editDocument($event)" ng-if="selectedSchema.objImplements && selected.parent[selected.key]">Editar Documento</md-button>'+
         '<md-button class="md-raised" ng-click="selectDocument($event)" ng-if="selectedSchema.objImplements">{{selected.parent[selected.key]?\'Cambiar\':\'Seleccionar\'}} Documento</md-button>'+
-        '<md-checkbox ng-disabled="selected.root || interface" ng-if="selectedSchema.type == \'string\'">'+
-          '<input ng-model="selected._doImplement" ng-change="changeKey()" required/>'+
-        '</md-checkbox>'+
+        '<md-switch ng-if="!selected.root&&!interface&&selectedSchema.type == \'string\'" ng-model="selected._doImplement">Implementa Interfaces?</md-switch>'+
         '<md-chips name="owner" placeholder="Interfaces" ng-if="selected._doImplement" md-autocomplete-snap readonly="selected.root || interface" ng-model="selected._implements" md-require-match="true">'+
           '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
             '<md-item-template>'+
@@ -409,18 +419,18 @@
         '<div class="md-caption" flex>{{copy.objDescription}}</div>'+
       '</div>'+
     '</form>'+
-    '<md-tabs flex md-dynamic-height="false" md-autoselect="true" ng-if="!metadataFlag && !securityFlag">'+
+    '<md-tabs flex md-dynamic-height="false" md-autoselect="true" ng-if="!metadataFlag && !securityFlag" md-selected="selectedInterface">'+
       '<md-tab ng-repeat="interface in copy.objInterface">'+
         '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
         '<md-tab-body>'+
           '<md-tab-content flex layout="column">'+
-            '<doc-builder-tab flex layout="column" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]" interfaceList="interfaces"></doc-builder-tab>'+
+            '<doc-builder-tab flex layout="column" active="$index==selectedInterface" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]" interfaceList="interfaces"></doc-builder-tab>'+
           '</md-tab-content>'+
         '</md-tab-body>'+
       '</md-tab>'+
       '<md-tab label="propiedades">'+
         '<md-tab-content flex layout="column">'+
-          '<doc-builder-tab flex layout="column" ng-model="copy" edit="edit && locked" interfaceList="interfaces" int-names="intNames" is-schema="isSchema()"></doc-builder-tab>'+
+          '<doc-builder-tab flex layout="column" active="$index==copy.objInterface.length" ng-model="copy" edit="edit && locked" interfaceList="interfaces" int-names="intNames" is-schema="isSchema()"></doc-builder-tab>'+
         '</md-tab-content>'+
       '</md-tab>'+
       '<md-tab ng-disabled="!locked" ng-if="!isSchema()" flex>'+
@@ -670,7 +680,7 @@
         implementable: '=?',
         schema: '=?'
       },
-      controller: function($scope, $mdToast, $mdDialog, $filter, $q) {
+      controller: function($scope, $mdToast, $mdDialog, $filter, $q, $timeout) {
         if(!$scope.interfaces) $scope.interfaces=[];
         $scope.stack = [];
         $scope.selectedAcl = null;
@@ -1001,7 +1011,9 @@
           if(value) {
             level.selected.parent[level.selected.key] = value;
           }
-          $scope.$broadcast('docBuilder:select', level.selected);
+          $timeout(function() {
+            $scope.$broadcast('docBuilder:activeSelect', level.selected);
+          });
         });
         $scope.aclAllChange = function() {
           if($scope.readAll) $scope.selectedAcl._acl.properties = {'properties:all': $scope.writeAll};
@@ -1019,7 +1031,8 @@
         interfaceList: '=',
         edit: '<?',
         intNames: '=',
-        isSchema: '<'
+        isSchema: '<',
+        active: '='
       },
       template: tabTemplate,
       compile: function() {
@@ -1049,6 +1062,10 @@
           }
           if(!$scope.schema) $scope.schema = {type: 'object'};
           if(!$scope.selected||$scope.selected.root) $scope.$emit('docBuilder:select', null);
+        });
+
+        $scope.$on('docBuilder:activeSelect', function($event, value) {
+          if($scope.active) $scope.$emit('docBuilder:select', value);
         });
 
         $scope.$on('docBuilder:select', function($event, value, dblck) {

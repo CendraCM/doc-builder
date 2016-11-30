@@ -8,9 +8,17 @@ doc-builder md-menu-item > * {
 }
 
 doc-builder md-menu-item > div {
-  min-height: 48px;
+  min-height: 67px !important;
   position: relative;
   outline: none;
+}
+
+doc-builder md-menu-item > div .editToggle {
+  visibility: hidden;
+}
+
+doc-builder md-menu-item > div:hover .editToggle {
+  visibility: visible;
 }
 
 doc-builder md-menu-item > div .lbl {

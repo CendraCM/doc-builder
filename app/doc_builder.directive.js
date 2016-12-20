@@ -191,7 +191,7 @@
                     '</md-chip-template>'+
                   '</md-chips>'+
                   '<h4>Grupos con Acceso</h4>'+
-                  '<md-chips name="acl" md-on-add="addInterface($chip)" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._acl" md-require-match="true">'+
+                  '<md-chips name="acl" md-on-select="$parent.selectedAcl=$chip" placeholder="Agregar Propietarios" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._acl" md-require-match="true">'+
                     '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, filter: [\'owner\', \'acl\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                       '<md-item-template>'+
                         '{{item.objName}}'+
@@ -203,7 +203,7 @@
                   '</md-chips>'+
                   '<div ng-if="isSchema()">'+
                     '<h4>Grupos que pueden Implementar</h4>'+
-                    '<md-chips name="acl" placeholder="Agregar Implementadores" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._implementable" md-require-match="true">'+
+                    '<md-chips name="imp" placeholder="Agregar Implementadores" md-autocomplete-snap readonly="copy.objSecurity.inmutable" ng-model="security._implementable" md-require-match="true">'+
                       '<md-autocomplete md-no-cache="true" md-items="item in getGroups({searchText: searchText, add: getImplementableReserveWords(), filter: [\'owner\', \'implementable\']})"  md-search-text="searchText" md-selected-item="selectedItem">'+
                         '<md-item-template>'+
                           '{{item.objName}}'+
@@ -314,7 +314,7 @@
     '</md-list>';
 
   var tabTemplate =
-    '<md-content flex>'+
+    '<md-content flex ng-if="!documentFlag">'+
       '<doc-builder-tree layout="column" edit-schema="!interface" edit="edit" types="types" ng-if="!hideTab && !documentFlag && !selectInterfaceFlag" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected" is-schema="isSchema"></doc-builder-tree>'+
       '<doc-builder-iface-selector ng-if="selectInterfaceFlag" interfaces="interfaceList" select="addInterface(iface)"></doc-builder-iface-selector>'+
     '</md-content>'+
@@ -343,17 +343,17 @@
         '<span flex></span>'+
       '</div>'+
       '<div layout="row" ng-switch-default md-whiteframe="2" layout-padding>'+
-        '<md-button class="md-raised" ng-click="editDocument($event)" ng-if="selectedSchema.objImplements && testVal()">Editar Documento</md-button>'+
-        '<md-button class="md-raised" ng-click="selectDocument($event)" ng-if="selectedSchema.objImplements">{{selected.parent[selected.key]?\'Cambiar\':\'Seleccionar\'}} Documento</md-button>'+
+        '<md-button class="md-raised" ng-click="editDocument($event)" ng-if="!isSchema && selectedSchema.objImplements && testVal()">Editar Documento</md-button>'+
+        '<md-button class="md-raised" ng-click="selectDocument($event)" ng-if="!isSchema && selectedSchema.objImplements">{{selected.parent[selected.key]?\'Cambiar\':\'Seleccionar\'}} Documento</md-button>'+
         '<md-switch ng-if="!selected.root&&!interface&&selectedSchema.type == \'string\'" ng-model="selected._doImplement">Implementa Interfaces?</md-switch>'+
         '<md-chips name="owner" md-on-add="implementInterface($chip)" placeholder="Interfaces" ng-if="selected._doImplement" md-autocomplete-snap readonly="selected.root || interface" ng-model="selected._implements" md-require-match="true">'+
-          '<md-autocomplete md-no-cache="true" md-items="item in implementable|filter:{objName: searchText}"  md-search-text="searchText" md-selected-item="selectedItem">'+
+          '<md-autocomplete md-no-cache="true" md-items="item in implementable|map:nameToString|filter:searchText"  md-search-text="searchText" md-selected-item="selectedItem">'+
             '<md-item-template>'+
-              '{{item.objName}}'+
+              '{{item}}'+
             '</md-item-template>'+
           '</md-autocomplete>'+
           '<md-chip-template>'+
-            '{{$chip.objName}}'+
+            '{{$chip}}'+
           '</md-chip-template>'+
         '</md-chips>'+
         '<span flex></span>'+
@@ -373,8 +373,8 @@
           '</div>'+
           '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
           '<span flex></span>'+
-          '{{copy}}'+
-          '<md-button class="md-icon-button" ng-if="!locked" ng-click="$parent.locked=true">'+
+          //'{{copy}}'+
+          '<md-button class="md-icon-button" ng-if="!locked" ng-click="doLock()">'+
             '<md-icon md-font-set="material-icons">lock</md-icon>'+
           '</md-button>'+
           '<md-button class="md-icon-button" ng-if="!locked" ng-click="goBack()">'+
@@ -644,6 +644,12 @@
     filterFn.$stateful=true;
     return filterFn;
   })
+  .filter('map', function() {
+    return function(source, mapFn) {
+      if(!Array.isArray(source)) return [];
+      return source.map(mapFn);
+    };
+  })
   .directive('docBuilder', function() {
     return {
       restrict: 'E',
@@ -653,6 +659,7 @@
         edit: '<?',
         done: '&',
         search: '&?',
+        lock: '&?',
         interfaces: '=?',
         implementable: '=?',
         schema: '=?'
@@ -742,6 +749,21 @@
           return false;
         };
 
+        $scope.doLock = function() {
+          if($scope.lock) {
+            $scope.lock({lock: true, id: $scope.ngModel._id})
+            .then(function() {
+              $scope.locked=true;
+            })
+            .catch(function(err) {
+              $scope.locked=false;
+              $mdToast.showSimple(err);
+            });
+          } else {
+            $scope.locked=true;
+          }
+        };
+
         $scope.doSave = function(mainForm) {
           if(isEmpty($scope.copy.objName)) {
             return $mdToast.showSimple('Debe Proporcionar un Nombre para el Documento.');
@@ -783,7 +805,14 @@
           var e = $scope.isSchema()?$scope.schema:($scope.stack.length?$scope.stack[$scope.stack.length-1].model:$scope.ngModel);
           if(!e._id) return $scope.goBack();
           $scope.copy = angular.merge({objName: 'Sin Título'}, e);
-          $scope.locked = false;
+          if($scope.lock) {
+            $scope.lock({lock: false, id: $scope.ngModel._id})
+            .then(function() {
+              $scope.locked=false;
+            });
+          } else {
+            $scope.locked = false;
+          }
         };
 
         $scope.addInterface = function(iface) {
@@ -1026,41 +1055,86 @@
               }
             }
             var down = function() {
-              var parent = scope.selected.root||scope.selected.parent;
-              var key;
-              if(getType(parent)=='array') {
-                key = angular.isDefined(scope.selected.key)?scope.selected.key+1:0;
-              }
-              if(getType(parent)=='object') {
-                var done = false;
-                for(var i in parent) {
-                  if(!scope.selected.key || done)  {
-                    key = i;
+              var parent;
+              if(scope.selected.parent && ['array', 'object'].includes(getType(scope.selected.parent[scope.selected.key])) && !isEmpty(scope.selected.parent[scope.selected.key])) {
+                let parent = scope.selected.parent[scope.selected.key];
+                switch(getType(parent)) {
+                  case "array":
+                    scope.$emit('docBuilder:select', {parent: parent, key: 0, schema: scope.selectedSchema});
                     break;
+                  case "object":
+                    for(let i in parent) {
+                      scope.$emit('docBuilder:select', {parent: parent, key: i, schema: scope.selectedSchema});
+                      break;
+                    }
+                    break;
+
+                }
+              } else {
+                let parent = scope.selected.root||scope.selected.parent;
+                let key;
+                if(getType(parent)=='array') {
+                  key = angular.isDefined(scope.selected.key)?scope.selected.key+1:0;
+                }
+                if(getType(parent)=='object') {
+                  var done = false;
+                  for(let i in parent) {
+                    if(!scope.selected.key || done)  {
+                      key = i;
+                      break;
+                    }
+                    if(scope.selected.key == i) done=true;
                   }
-                  if(scope.selected.key == i) done=true;
+                }
+                if(angular.isDefined(parent[key])) {
+                  scope.$emit('docBuilder:select', {parent: parent, key: key, schema: scope.selected.schema||scope.schema});
+                } else if(!scope.selected.root) {
+                  scope.$broadcast('docBuilder:selectNextFrom', parent);
                 }
               }
-              if(angular.isDefined(parent[key])) scope.$emit('docBuilder:select', {parent: parent, key: key, schema: scope.selected.schema||scope.schema});
             };
 
             var up = function() {
               var parent = scope.selected.root||scope.selected.parent;
               var key;
+              var schema;
               if(getType(parent)=='array') {
                 key = angular.isDefined(scope.selected.key)?scope.selected.key-1:parent.length-1;
+                schema = getType(scope.selected.schema.items)=='array'?scope.selected.schema.items[key]||{type: 'object'}:scope.selected.schema.items;
               }
               if(getType(scope.selected.parent)=='object') {
                 for(var i in scope.selected.parent) {
                   if(scope.selected.key == i) break;
                   key = i;
                 }
+                schema = scope.selected.schema.properties[key];
               }
-              if(angular.isDefined(parent[key])) scope.$emit('docBuilder:select', {parent: parent, key: key, schema: scope.selected.schema||scope.schema});
+              if(scope.selected.parent && angular.isDefined(parent[key]) && ['array', 'object'].includes(getType(parent[key])) && !isEmpty(parent[key])) {
+                switch(getType(parent[key])) {
+                  case "array":
+                    scope.$emit('docBuilder:select', {parent: parent[key], key: parent[key].length - 1, schema: schema});
+                    break;
+                  case "object":
+                    var newKey;
+                    for(let i in parent[key]) {
+                      newKey = i;
+                    }
+                    scope.$emit('docBuilder:select', {parent: parent[key], key: newKey, schema: schema});
+                    break;
+                }
+              } else {
+                if(angular.isDefined(parent[key])) {
+                  scope.$emit('docBuilder:select', {parent: parent, key: key, schema: scope.selected.schema||scope.schema});
+                } else if(!scope.selected.root) {
+                  scope.$broadcast('docBuilder:selectPrevFrom', parent);
+                }
+              }
             };
 
             element.on('keydown', function($event) {
               console.log($event.code +' '+ $event.which);
+
+              console.log($event);
 
               switch ($event.which) {
                 case 40:
@@ -1068,7 +1142,16 @@
                   break;
                 case 38:
                   scope.$apply(up);
-
+                  break;
+                case 27:
+                  scope.$apply(scope.$emit('docBuilder:select'));
+                  break;
+                case 37:
+                  if($event.ctrlKey) scope.$apply(scope.emit('docBuilder:leftInterface'));
+                  break;
+                case 39:
+                  if($event.ctrlKey) scope.$apply(scope.emit('docBuilder:rightInterface'));
+                  break;
               }
 
             });
@@ -1127,6 +1210,7 @@
             }
             if(schema.type == 'array') value.equalItems = getType(schema.items)!='array';
             if(schema.type == 'string') value._implements = schema.objImplements||[];
+            value._doImplement = !!schema.objImplements;
             $scope.selectedSchema = schema;
             $scope.memo = angular.merge({}, {selectedSchema: $scope.selectedSchema, value: value.parent[value.key]});
           }
@@ -1137,6 +1221,10 @@
             }
           }
         });
+
+        $scope.nameToString = function(item) {
+          return item.objName;
+        };
 
         $scope.changeEqualItems = function() {
           if($scope.selectedSchema.type == 'array') {
@@ -1175,7 +1263,7 @@
 
         $scope.implementInterface = function(iface) {
           $scope.selectedSchema.objImplements = $scope.selectedSchema.objImplements||[];
-          if(!$scope.selectedSchema.objImplements.includes(iface.objName)) $scope.selectedSchema.objImplements.push(iface.objName);
+          if(!$scope.selectedSchema.objImplements.includes(iface)) $scope.selectedSchema.objImplements.push(iface);
         };
 
         $scope.docSearch = function() {
@@ -1361,8 +1449,24 @@
         $scope.getType = getType;
         $scope.isEmpty = isEmpty;
 
+        $scope.$on('docBuilder:selectNextFrom', function($event, fromItem) {
+          var next = false;
+          for(let i in $scope.iteration) {
+            let item = $scope.iteration[i];
+            if(next) return $scope.select($event, item, false);
+            if(item.item === fromItem) next=true;
+          }
+        });
+
+        $scope.$on('docBuilder:selectPrevFrom', function($event, fromItem) {
+          for(let i in $scope.iteration) {
+            let item = $scope.iteration[i];
+            if(item.item === fromItem) return $scope.select($event, item, false);
+          }
+        });
+
         $scope.select = function($event, item, dblck) {
-          $event.stopPropagation();
+          $event.stopPropagation&&$event.stopPropagation();
           if(!item.edit || item.key != $scope.selected.key) {
             if($scope.selected.item) $scope.clearItem(null, $scope.selected.item);
             var element = {parent: $scope.ngModel, key: item.key, schema: $scope.schema, item: item};
@@ -1489,7 +1593,9 @@
         $scope.$watchCollection('ngModel', function(value, prev) {
           createIterable(value);
         });
+
         $scope.$watchCollection('schema', createIterable);
+
         var docData = {};
         $scope.getDocument = function(id) {
           if(!docData[id]) {

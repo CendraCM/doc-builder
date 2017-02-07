@@ -1,3 +1,17 @@
+doc-builder md-tab-item > .md-button.md-icon-button {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+doc-builder .leaf:hover {
+  background-color: rgba(158,158,158,0.2) !important;
+}
+
+doc-builder tab-remove {
+  cursor: pointer;
+  margin-left: 8px;
+}
+
 doc-builder md-menu-item {
   height:auto;
   width: auto;

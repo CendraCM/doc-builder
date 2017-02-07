@@ -260,23 +260,10 @@
     '<md-list ng-switch="schema.type" layout="column">'+
       '<md-menu-item layout="column" ng-repeat="item in iteration">'+
         //'{{item}}'+
-        '<div layout="row" flex layout-align="start center" ng-click="select($event, item)" ng-dblclick="select($event, item, true)" ng-if="!item.edit" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}">'+
-          '<md-button class="md-icon-button"><md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item.schema.type].icon}}</md-icon></md-button>'+
-          '<span class="lbl" layout-padding>{{item.label}}:</span>'+
-          '<span layout-padding  md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\'}" ng-if="!item.tree && !isSchema && item.schema.type != \'boolean\'">'+
-            '{{(item.item.toISOString?item.item.toISOString():item.item)|docName:item.implements:getDocument}}'+
-          '</span>'+
-          '<md-checkbox ng-model="item.item" layout="row" layout-align="center center" ng-disabled="true" ng-if="!item.tree && !isSchema && item.schema.type == \'boolean\'"></md-checkbox>'+
-          '<span ng-if="isSchema">{{types[item.schema.type].desc}}</span>'+
-          '<md-button class="md-icon-button editToggle" ng-if="edit" ng-click="editValue($event, item)" >'+
-            '<md-icon md-font-set="material-icons">edit</md-icon>'+
-          '</md-button>'+
-          '<span flex></span>'+
-        '</div>'+
-        '<div layout="row" flex layout-align="start center" ng-click="select($event, item)" ng-dblclick="select($event, item, true)" ng-if="item.edit" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}">'+
+        '<div layout="row" class="leaf" flex layout-align="start center" ng-click="select($event, item)" ng-dblclick="select($event, item, true)" md-ink-ripple="#9A9A9A" md-colors="{color: selected.parent == ngModel && selected.key == item.key?\'primary-700\':\'grey-800\', background: selected.parent == ngModel && selected.key == item.key?\'primary-200-0.2\':\'background\'}">'+
           '<form layout="row" layout-align="start center" ng-submit="changeValue($event, item)">'+
             '<md-menu>'+
-              '<md-button class="md-icon-button" ng-disabled="item.schema.objImplements" ng-click="openMenu($event, item.key, $mdOpenMenu)">'+
+              '<md-button class="md-icon-button" ng-disabled="item.schema.objImplements||!edit" ng-click="openMenu($event, item.key, $mdOpenMenu)">'+
                 '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item._type].icon}}</md-icon>'+
               '</md-button>'+
               '<md-menu-content>'+
@@ -288,22 +275,25 @@
                 '</md-menu-item>'+
               '</md-menu-content>'+
             '</md-menu>'+
-            '<span class="lbl" ng-if="!item.editLabel||!editSchema||selected.schema.type != \'object\'" ng-click="editLabel($event, item)" layout-padding>{{item.label}}:</span>'+
-            '<md-input-container ng-if="item.editLabel&&editSchema&&selected.schema.type == \'object\'">'+
-              '<input ng-model="item._key" focus-me="true" ng-click="$event.stopPropagation()" required/>'+
+            '<span class="lbl" ng-if="!edit||!item.editLabel||!editSchema||selected.schema.type != \'object\'" ng-click="editLabel($event, item)" layout-padding>{{item.label}}:</span>'+
+            '<md-input-container ng-if="edit&&item.editLabel&&editSchema&&selected.schema.type == \'object\'">'+
+              '<input ng-model="item._key" focus-me="true" ng-click="$event.stopPropagation()" aria-label="{{item.label}} Key" required/>'+
             '</md-input-container>'+
-            '<md-input-container ng-if="!item.tree && !isSchema && !item.implements && ![\'boolean\', \'object\', \'array\'].includes(item._type)">'+
-              '<input ng-model="item._item" focus-me="true" type="{{item._type}}" ng-click="$event.stopPropagation()"/>'+
+            '<span layout-padding  md-colors="{color: \'grey-800\'}" ng-if="(!edit || selected.key != item.key) && !item.tree && !isSchema && item.schema.type != \'boolean\'">'+
+              '{{(item.item.toISOString?item.item.toISOString():item.item)|docName:item.implements:getDocument}}'+
+            '</span>'+
+            '<md-input-container ng-if="edit && selected.key == item.key && !item.tree && !isSchema && !item.implements && ![\'boolean\', \'object\', \'array\'].includes(item._type)">'+
+              '<input ng-model="item._item" focus-me="true" type="{{item._type}}" ng-click="$event.stopPropagation()" aria-label="{{item.label}} Value"/>'+
             '</md-input-container>'+
-            '<md-checkbox ng-model="item._item" layout="row" layout-align="center center" ng-disabled="!edit" ng-if="!item.tree && !isSchema && item.schema.type == \'boolean\'"></md-checkbox>'+
+            '<md-checkbox ng-model="item._item" layout="row" layout-align="center center" ng-disabled="!edit" ng-if="!item.tree && !isSchema && item._type == \'boolean\'" aria-label="{{item.label}} Value"></md-checkbox>'+
             '<span ng-if="isSchema">{{types[item._type].desc}}</span>'+
-            '<md-button class="md-icon-button" type="submit">'+
+            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema" type="submit">'+
               '<md-icon md-font-set="material-icons">done</md-icon>'+
             '</md-button>'+
-            '<md-button class="md-icon-button" ng-click="clearItem($event, item)">'+
+            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema" ng-click="clearItem($event, item)">'+
               '<md-icon md-font-set="material-icons">clear</md-icon>'+
             '</md-button>'+
-            '<md-button class="md-icon-button" ng-click="delete()">'+
+            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema" ng-click="delete()">'+
               '<md-icon md-font-set="material-icons">delete</md-icon>'+
             '</md-button>'+
             '<span flex></span>'+
@@ -318,7 +308,7 @@
       '<doc-builder-tree layout="column" edit-schema="!interface" edit="edit" types="types" ng-if="!hideTab && !documentFlag && !selectInterfaceFlag" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected" is-schema="isSchema"></doc-builder-tree>'+
       '<doc-builder-iface-selector ng-if="selectInterfaceFlag" interfaces="interfaceList" select="addInterface(iface)"></doc-builder-iface-selector>'+
     '</md-content>'+
-    '<form ng-submit="doAction()" ng-if="edit && !hideTab && !documentFlag" ng-switch="selectedSchema.type">'+
+    '<form ng-submit="doAction($event)" ng-if="edit && !hideTab && !documentFlag" ng-switch="selectedSchema.type">'+
       '<div layout="row" ng-switch-when="array" md-whiteframe="2" layout-padding layout-align="start center">'+
         '<md-button type="submit" ng-disabled="isSchema && selected.equalItems && selected.parent[selected.key].length > 0">'+
           'Agregar Item'+
@@ -332,7 +322,7 @@
       '<div layout="row" ng-switch-when="object" md-whiteframe="2" layout-padding>'+
         '<md-input-container ng-if="!interface">'+
           '<label>Etiqueta</label>'+
-          '<input ng-model="selected.new" required/>'+
+          '<input ng-model="selected.new" class="label-input" required/>'+
         '</md-input-container>'+
         '<md-button type="submit" ng-if="!interface">'+
           'Agregar'+
@@ -373,7 +363,7 @@
           '</div>'+
           '<div class="lvl" md-colors="{color: \'primary\'}">{{copy.objName}}</div>'+
           '<span flex></span>'+
-          //'{{copy}}'+
+          '{{copy}}'+
           '<md-button class="md-icon-button" ng-if="!locked" ng-click="doLock()">'+
             '<md-icon md-font-set="material-icons">lock</md-icon>'+
           '</md-button>'+
@@ -398,7 +388,11 @@
     '</form>'+
     '<md-tabs flex md-dynamic-height="false" md-autoselect="true" ng-if="!metadataFlag && !securityFlag" md-selected="selectedInterface">'+
       '<md-tab ng-repeat="interface in copy.objInterface">'+
-        '<md-tab-label>{{getName(interface).plain}}</md-tab-label>'+
+        '<md-tab-label>'+
+          '<span>{{getName(interface).plain}}</span>'+
+          '<tab-remove ng-if="locked && $index == selectedInterface" ng-click="removeInterface($event, interface)"></tab-remove>'+
+          //'<md-icon md-font-set="material-icons" ng-if="locked" ng-click="removeInterface($event, interface)">close</md-icon>'+
+        '</md-tab-label>'+
         '<md-tab-body>'+
           '<md-tab-content flex layout="column">'+
             '<doc-builder-tab flex layout="column" active="$index==selectedInterface" ng-model="copy[getName(interface).key]" edit="edit && locked" interface="map[interface]" interfaceList="interfaces" implementable="implementable"></doc-builder-tab>'+
@@ -407,7 +401,7 @@
       '</md-tab>'+
       '<md-tab label="propiedades">'+
         '<md-tab-content flex layout="column">'+
-          '<doc-builder-tab flex layout="column" active="$index==copy.objInterface.length" ng-model="copy" edit="edit && locked" interfaceList="interfaces" implementable="implementable" int-names="intNames" is-schema="isSchema()"></doc-builder-tab>'+
+          '<doc-builder-tab flex layout="column" active="$index==copy.objInterface.length" ng-model="propertiesModel" edit="edit && locked" interfaceList="interfaces" implementable="implementable" int-names="intNames" is-schema="isSchema()"></doc-builder-tab>'+
         '</md-tab-content>'+
       '</md-tab>'+
       '<md-tab ng-disabled="!locked" ng-if="!isSchema()" flex>'+
@@ -670,6 +664,8 @@
         $scope.selectedAcl = null;
         $scope.readAll = false;
         $scope.writeAll = false;
+        $scope.propertiesModel = null;
+        $scope.selectedInterface = 0;
 
         $scope.isSchema = function() {
           return !$scope.ngModel && $scope.schema;
@@ -677,14 +673,16 @@
 
         $scope.$watchCollection('ngModel', function(value) {
           if($scope.isSchema()) return;
-          $scope.copy = angular.merge({objName: 'Sin Título'}, value);
+          $scope.copy = angular.merge({objName: 'Sin Título', objLocal:{}}, value);
           $scope.locked = !value._id;
+          $scope.propertiesModel = $scope.copy.objLocal;
         });
 
         $scope.$watchCollection('schema', function(value) {
           if(!$scope.isSchema()) return;
-          $scope.copy = angular.merge({objName: 'Sin Título'}, value);
+          $scope.copy = angular.merge({objName: 'Sin Título', properties:{}}, value);
           $scope.locked = !value._id;
+          $scope.propertiesModel = $scope.copy.properties;
         });
 
         $scope.$watchCollection('copy.objInterface', function(value) {
@@ -768,7 +766,7 @@
           if(isEmpty($scope.copy.objName)) {
             return $mdToast.showSimple('Debe Proporcionar un Nombre para el Documento.');
           }
-          if(isEmpty($scope.copy)) {
+          if(($scope.isSchema() && isEmpty($scope.copy)) || (!$scope.isSchema() && isEmpty($scope.copy.objInterface) && isEmpty($scope.copy.objLocal))) {
             return $mdToast.showSimple('El documento no puede estar vacío.');
           }
           var error;
@@ -818,6 +816,17 @@
         $scope.addInterface = function(iface) {
           if(!$scope.copy.objInterface) $scope.copy.objInterface = [];
           if(!$scope.copy.objInterface.includes(iface._id))$scope.copy.objInterface.push(iface._id);
+        };
+
+        $scope.removeInterface = function($event, iface) {
+          $event.stopPropagation();
+          var name = $scope.getName(iface);
+          if(name && name.key) {
+            delete $scope.copy[name.key];
+          }
+          if($scope.copy.objInterface && $scope.copy.objInterface.length && $scope.copy.objInterface.indexOf(iface) !== -1) {
+            $scope.copy.objInterface.splice($scope.copy.objInterface.indexOf(iface), 1);
+          }
         };
 
         $scope.saveMetadata = function() {
@@ -891,7 +900,7 @@
             }
             if(!isEmpty($scope.security.acl)) {
               if($scope.security.acl['group:public']) $scope.security._acl.push({_id: 'group:public', objName: 'Público', _acl: $scope.security.acl['group:public']});
-              var ids = Object.keys($scope.security.acl).filter(function(k){
+              let ids = Object.keys($scope.security.acl).filter(function(k){
                 return k!='group:public';
               });
               if(ids.length) $scope.$emit('docBuilder:search', {_id: {$in: ids}}, function(err, list) {
@@ -908,7 +917,7 @@
               }).map(function(impId) {
                 return {_id: impId, objName: rw[impId]};
               });
-              var ids = ($scope.security.implementable||[]).filter(function(k){
+              let ids = ($scope.security.implementable||[]).filter(function(k){
                 return !rw[k];
               });
               if(ids.length) $scope.$emit('docBuilder:search', {_id: {$in: ids}}, function(err, list) {
@@ -938,8 +947,8 @@
         };
 
         $scope.selectInterface = function(iface) {
-          $scope.selectedInterface = iface;
-          if(!iface) return;
+          if(!iface || $scope.copy.objInterface.indexOf(iface) === -1) return ($scope.selectedInterface = 0);
+          $scope.selectedInterface = $scope.copy.objInterface.indexOf(iface);
           var key = $scope.getName(iface).key;
           if(!$scope.copy[key]) $scope.copy[key] = {};
         };
@@ -1020,6 +1029,15 @@
             $scope.$broadcast('docBuilder:activeSelect', level.selected);
           });
         });
+
+        $scope.$on('docBuilder:leftInterface', function($event) {
+          if($scope.selectedInterface > 0) $scope.selectedInterface--;
+        });
+
+        $scope.$on('docBuilder:rightInterface', function($event) {
+          if($scope.selectedInterface < ($scope.copy.objInterface||[]).length) $scope.selectedInterface++;
+        });
+
         $scope.aclAllChange = function() {
           if($scope.readAll) $scope.selectedAcl._acl.properties = {'properties:all': $scope.writeAll};
           else $scope.selectedAcl._acl.properties = {};
@@ -1079,6 +1097,7 @@
                 if(getType(parent)=='object') {
                   var done = false;
                   for(let i in parent) {
+                    if(i.substr(0,3)=='obj') continue;
                     if(!scope.selected.key || done)  {
                       key = i;
                       break;
@@ -1104,6 +1123,7 @@
               }
               if(getType(scope.selected.parent)=='object') {
                 for(var i in scope.selected.parent) {
+                  if(i.substr(0,3)=='obj') continue;
                   if(scope.selected.key == i) break;
                   key = i;
                 }
@@ -1135,8 +1155,9 @@
               console.log($event.code +' '+ $event.which);
 
               console.log($event);
-
+              if(angular.element($event.target).hasClass('label-input')) return;
               switch ($event.which) {
+                case 13:
                 case 40:
                   scope.$apply(down);
                   break;
@@ -1147,10 +1168,10 @@
                   scope.$apply(scope.$emit('docBuilder:select'));
                   break;
                 case 37:
-                  if($event.ctrlKey) scope.$apply(scope.emit('docBuilder:leftInterface'));
+                  if($event.ctrlKey) scope.$apply(scope.$emit('docBuilder:leftInterface'));
                   break;
                 case 39:
-                  if($event.ctrlKey) scope.$apply(scope.emit('docBuilder:rightInterface'));
+                  if($event.ctrlKey) scope.$apply(scope.$emit('docBuilder:rightInterface'));
                   break;
               }
 
@@ -1179,6 +1200,10 @@
           if(!$scope.schema) $scope.schema = {type: 'object'};
           if(!$scope.selected||$scope.selected.root) $scope.$emit('docBuilder:select', null);
         });
+
+        $scope.stopPropagation = function($event) {
+          $event.stopPropagation();
+        };
 
         $scope.$on('docBuilder:activeSelect', function($event, value) {
           if($scope.active) $scope.$emit('docBuilder:select', value);
@@ -1326,7 +1351,8 @@
           'boolean': {desc: 'Verdadero/Falso', icon: 'indeterminate_check_box'}
         };
 
-        $scope.doAction = function() {
+        $scope.doAction = function($event) {
+          $event.stopPropagation();
           var element = $scope.selected.root||$scope.selected.parent[$scope.selected.key];
           var schema = $scope.selectedSchema;
           switch(schema.type) {
@@ -1467,7 +1493,7 @@
 
         $scope.select = function($event, item, dblck) {
           $event.stopPropagation&&$event.stopPropagation();
-          if(!item.edit || item.key != $scope.selected.key) {
+          if(item.key != $scope.selected.key) {
             if($scope.selected.item) $scope.clearItem(null, $scope.selected.item);
             var element = {parent: $scope.ngModel, key: item.key, schema: $scope.schema, item: item};
             if(!dblck && $scope.selected.parent == element.parent && $scope.selected.key == element.key) {
@@ -1480,11 +1506,11 @@
 
         $scope.clearItem = function($event, item) {
           if($event) $event.stopPropagation();
-          delete item._item;
-          delete item._type;
-          delete item._key;
+          item._item = item.item;
+          item._type = item.schema.type;
+          item._key = item.key;
           item.editSchema = false;
-          item.edit = false;
+          item.editLabel = false;
         };
 
         $scope.changeType = function(type) {
@@ -1526,9 +1552,9 @@
           if(!$scope.edit) return;
           if($scope.selected.key == item.key) $event.stopPropagation();
           else $scope.select($event, item);
-          item._item = item.item;
+          /*item._item = item.item;
           item._type = item.schema.type;
-          item._key = item.key;
+          item._key = item.key;*/
           item.edit = true;
         };
 
@@ -1573,6 +1599,10 @@
                 if(!it.schema) it.schema = {type: getType(item)};
                 it.tree= ['array', 'object'].indexOf(it.schema.type) !== -1;
                 it.implements = !!it.schema.objImplements;
+                it._item = it.item;
+                it._type = it.schema.type;
+                it._key = it.key;
+                it.edit = false;
                 $scope.iteration.push(it);
               });
               break;
@@ -1583,6 +1613,10 @@
                   it.schema = ($scope.schema.properties||{})[i]||{type: getType(item)};
                   it.tree= ['array', 'object'].indexOf(it.schema.type) !== -1;
                   it.implements = !!it.schema.objImplements;
+                  it._item = it.item;
+                  it._type = it.schema.type;
+                  it._key = it.key;
+                  it.edit = false;
                   $scope.iteration.push(it);
                 })(i, $scope.ngModel[i]);
               }
@@ -1692,5 +1726,11 @@
         });
       }
     };
+  })
+  .directive('tabRemove', function() {
+    return {
+      restrict: 'E',
+      template: '<md-icon md-font-set="material-icons">delete</md-icon>'
+    }
   });
 })();

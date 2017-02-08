@@ -264,11 +264,11 @@
           '<form layout="row" layout-align="start center" ng-submit="changeValue($event, item)">'+
             '<md-menu>'+
               '<md-button class="md-icon-button" ng-disabled="item.schema.objImplements||!edit" ng-click="openMenu($event, item.key, $mdOpenMenu)">'+
-                '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item._type].icon}}</md-icon>'+
+                '<md-icon md-font-set="material-icons">{{item.schema.objImplements?\'insert_drive_file\':types[item.schema.type].icon}}</md-icon>'+
               '</md-button>'+
               '<md-menu-content>'+
                 '<md-menu-item ng-repeat="(key, type) in types">'+
-                  '<md-button ng-click="item._type = key">'+
+                  '<md-button ng-click="changeType(key)">'+
                     '<md-icon md-font-set="material-icons">{{type.icon}}</md-icon>'+
                     '<span>{{type.desc}}</span>'+
                   '</md-button>'+
@@ -282,15 +282,15 @@
             '<span layout-padding  md-colors="{color: \'grey-800\'}" ng-if="(!edit || selected.key != item.key) && !item.tree && !isSchema && item.schema.type != \'boolean\'">'+
               '{{(item.item.toISOString?item.item.toISOString():item.item)|docName:item.implements:getDocument}}'+
             '</span>'+
-            '<md-input-container ng-if="edit && selected.key == item.key && !item.tree && !isSchema && !item.implements && ![\'boolean\', \'object\', \'array\'].includes(item._type)">'+
+            '<md-input-container ng-if="edit && selected.key == item.key && !item.tree && !isSchema && !item.implements && ![\'boolean\', \'object\', \'array\'].includes(item.schema.type)">'+
               '<input ng-model="item._item" focus-me="true" type="{{item._type}}" ng-click="$event.stopPropagation()" aria-label="{{item.label}} Value"/>'+
             '</md-input-container>'+
-            '<md-checkbox ng-model="item._item" layout="row" layout-align="center center" ng-disabled="!edit" ng-if="!item.tree && !isSchema && item._type == \'boolean\'" aria-label="{{item.label}} Value"></md-checkbox>'+
-            '<span ng-if="isSchema">{{types[item._type].desc}}</span>'+
-            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema" type="submit">'+
+            '<md-checkbox ng-model="item._item" layout="row" layout-align="center center" ng-disabled="!edit" ng-if="!item.tree && !isSchema && item.schema.type == \'boolean\'" aria-label="{{item.label}} Value"></md-checkbox>'+
+            '<span ng-if="isSchema">{{types[item.schema.type].desc}}</span>'+
+            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema && !isSchema" type="submit">'+
               '<md-icon md-font-set="material-icons">done</md-icon>'+
             '</md-button>'+
-            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema" ng-click="clearItem($event, item)">'+
+            '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema && !isSchema" ng-click="clearItem($event, item)">'+
               '<md-icon md-font-set="material-icons">clear</md-icon>'+
             '</md-button>'+
             '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema" ng-click="delete()">'+
@@ -304,7 +304,7 @@
     '</md-list>';
 
   var tabTemplate =
-    '<md-content flex ng-if="!documentFlag">'+
+    '<md-content flex ng-if="!documentFlag" ng-click="selectNone($event)">'+
       '<doc-builder-tree layout="column" edit-schema="!interface" edit="edit" types="types" ng-if="!hideTab && !documentFlag && !selectInterfaceFlag" schema="schema" int-names="intNames" ng-model="ngModel" selected="selected" is-schema="isSchema"></doc-builder-tree>'+
       '<doc-builder-iface-selector ng-if="selectInterfaceFlag" interfaces="interfaceList" select="addInterface(iface)"></doc-builder-iface-selector>'+
     '</md-content>'+
@@ -401,7 +401,7 @@
       '</md-tab>'+
       '<md-tab label="propiedades">'+
         '<md-tab-content flex layout="column">'+
-          '<doc-builder-tab flex layout="column" active="$index==copy.objInterface.length" ng-model="propertiesModel" edit="edit && locked" interfaceList="interfaces" implementable="implementable" int-names="intNames" is-schema="isSchema()"></doc-builder-tab>'+
+          '<doc-builder-tab flex layout="column" active="$index==copy.objInterface.length" ng-model="propertiesModel" schema="propertiesSchema" edit="edit && locked" interfaceList="interfaces" implementable="implementable" int-names="intNames" is-schema="isSchema()"></doc-builder-tab>'+
         '</md-tab-content>'+
       '</md-tab>'+
       '<md-tab ng-disabled="!locked" ng-if="!isSchema()" flex>'+
@@ -676,13 +676,15 @@
           $scope.copy = angular.merge({objName: 'Sin Título', objLocal:{}}, value);
           $scope.locked = !value._id;
           $scope.propertiesModel = $scope.copy.objLocal;
+          $scope.propertiesSchema = $scope.schema;
         });
 
         $scope.$watchCollection('schema', function(value) {
           if(!$scope.isSchema()) return;
-          $scope.copy = angular.merge({objName: 'Sin Título', properties:{}}, value);
+          $scope.copy = angular.merge({objName: 'Sin Título', type:'object',properties:{}}, value);
           $scope.locked = !value._id;
-          $scope.propertiesModel = $scope.copy.properties;
+          $scope.propertiesModel = $scope.ngModel;
+          $scope.propertiesSchema = $scope.copy;
         });
 
         $scope.$watchCollection('copy.objInterface', function(value) {
@@ -832,6 +834,8 @@
         $scope.saveMetadata = function() {
           $scope.metadataFlag = false;
           angular.merge($scope.copy, $scope.metadata);
+          if(!$scope.copy.objTags.length) delete $scope.copy.objTags;
+          if(!$scope.copy.objInterface.length) delete $scope.copy.objInterface;
         };
 
         $scope.editMetadata = function($event) {
@@ -1049,6 +1053,7 @@
     return {
       restrict: 'E',
       scope: {
+        schema: '=',
         ngModel: '=',
         interface: '=',
         interfaceList: '=',
@@ -1185,7 +1190,7 @@
           if($scope.interface) {
             $scope.schema = angular.merge({}, $scope.interface);
             if(isEmpty(value)) $scope.ngModel = buildDocument($scope.schema);
-          } else if(!$scope.interface || ((!$scope.interface.properties||isEmpty($scope.interface.properties)) && (!$scope.interface.items||isEmpty($scope.interface.items)))) {
+          } else if(!$scope.isSchema && (!$scope.interface || ((!$scope.interface.properties||isEmpty($scope.interface.properties)) && (!$scope.interface.items||isEmpty($scope.interface.items))))) {
             if(value.objSchema) {
               $scope.schema = {type: 'object', properties: value.objSchema};
             } else {
@@ -1195,11 +1200,16 @@
               })};
               value.objSchema = $scope.schema.properties;
             }
-
           }
           if(!$scope.schema) $scope.schema = {type: 'object'};
           if(!$scope.selected||$scope.selected.root) $scope.$emit('docBuilder:select', null);
         });
+
+        $scope.$watch('schema', function(value) {
+          if(value && $scope.isSchema) {
+            $scope.ngModel = buildDocument($scope.schema);
+          }
+        })
 
         $scope.stopPropagation = function($event) {
           $event.stopPropagation();
@@ -1246,6 +1256,11 @@
             }
           }
         });
+
+        $scope.selectNone = function($event) {
+          $event.stopPropagation();
+          $scope.$emit('docBuilder:select');
+        };
 
         $scope.nameToString = function(item) {
           return item.objName;
@@ -1513,8 +1528,8 @@
           item.editLabel = false;
         };
 
-        $scope.changeType = function(type) {
-          $scope.$emit('docBuilder:typeChange', type);
+        $scope.changeType = function() {
+          $scope.$emit('docBuilder:typeChange', $scope.selected.schema.type);
         };
 
 
@@ -1561,8 +1576,12 @@
         $scope.delete = function() {
           if(getType($scope.selected.parent)=='array') {
             $scope.selected.parent.splice($scope.selected.key,1);
+            if(getType($scope.selected.schema.items)=='array') {
+              $scope.selected.schema.items.splice($scope.selected.key,1);
+            }
           } else {
             delete $scope.selected.parent[$scope.selected.key];
+            delete $scope.selected.schema.properties[$scope.selected.key];
           }
           $scope.$emit('docBuilder:select', null, false);
         };

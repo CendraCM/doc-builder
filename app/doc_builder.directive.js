@@ -29,7 +29,7 @@
             '</md-input-container>'+
           '</div>'+
           '<div layout="row" layout-wrap>'+
-            '<div class="interface" layout="column" layout-align="center center" flex ng-repeat="interface in interfaces|filter:ifaceSearch" ng-click="select({iface: interface})">'+
+            '<div class="interface" layout="column" layout-align="center center" flex="15" ng-repeat="interface in interfaces|filter:ifaceSearch" ng-click="select({iface: interface})">'+
               '<md-icon md-font-set="material-icons">{{interface.objIcon||\'library_books\'}}</md-icon>'+
               '<div>{{interface.objName}}</div>'+
             '</div>'+
@@ -279,13 +279,13 @@
             '<md-input-container ng-if="edit&&item.editLabel&&editSchema&&selected.schema.type == \'object\'">'+
               '<input ng-model="item._key" focus-me="true" ng-click="$event.stopPropagation()" aria-label="{{item.label}} Key" required/>'+
             '</md-input-container>'+
-            '<span layout-padding  md-colors="{color: \'grey-800\'}" ng-if="(!edit || selected.key != item.key) && !item.tree && !isSchema && item.schema.type != \'boolean\'">'+
+            '<span layout-padding  md-colors="{color: \'grey-800\'}" ng-if="(!edit || selected.key != item.key || item.implements) && !item.tree && !isSchema && item.schema.type != \'boolean\'">'+
               '{{(item.item.toISOString?item.item.toISOString():item.item)|docName:item.implements:getDocument}}'+
             '</span>'+
             '<md-input-container ng-if="edit && selected.key == item.key && !item.tree && !isSchema && !item.implements && ![\'boolean\', \'object\', \'array\'].includes(item.schema.type)">'+
-              '<input ng-model="item._item" focus-me="true" type="{{item._type}}" ng-click="$event.stopPropagation()" aria-label="{{item.label}} Value"/>'+
+              '<input ng-model="item.item" focus-me="true" type="{{item.schema.type}}" ng-click="$event.stopPropagation()" aria-label="{{item.label}} Value"/>'+
             '</md-input-container>'+
-            '<md-checkbox ng-model="item._item" layout="row" layout-align="center center" ng-disabled="!edit" ng-if="!item.tree && !isSchema && item.schema.type == \'boolean\'" aria-label="{{item.label}} Value"></md-checkbox>'+
+            '<md-checkbox ng-model="item.item" layout="row" layout-align="center center" ng-disabled="!edit" ng-if="!item.tree && !isSchema && item.schema.type == \'boolean\'" aria-label="{{item.label}} Value"></md-checkbox>'+
             '<span ng-if="isSchema">{{types[item.schema.type].desc}}</span>'+
             '<md-button class="md-icon-button" ng-if="selected.key == item.key && edit && editSchema && !isSchema" type="submit">'+
               '<md-icon md-font-set="material-icons">done</md-icon>'+
@@ -1053,7 +1053,7 @@
     return {
       restrict: 'E',
       scope: {
-        schema: '=',
+        schema: '=?',
         ngModel: '=',
         interface: '=',
         interfaceList: '=',
@@ -1508,12 +1508,11 @@
 
         $scope.select = function($event, item, dblck) {
           $event.stopPropagation&&$event.stopPropagation();
+          var element = {parent: $scope.ngModel, key: item.key, schema: $scope.schema, item: item};
           if(item.key != $scope.selected.key) {
             if($scope.selected.item) $scope.clearItem(null, $scope.selected.item);
-            var element = {parent: $scope.ngModel, key: item.key, schema: $scope.schema, item: item};
-            if(!dblck && $scope.selected.parent == element.parent && $scope.selected.key == element.key) {
-              element = null;//{parent: null, key: null, schema: null};
-            }
+            $scope.$emit('docBuilder:select', element, dblck);
+          } else if (dblck) {
             $scope.$emit('docBuilder:select', element, dblck);
           }
 
@@ -1528,8 +1527,8 @@
           item.editLabel = false;
         };
 
-        $scope.changeType = function() {
-          $scope.$emit('docBuilder:typeChange', $scope.selected.schema.type);
+        $scope.changeType = function(type) {
+          $scope.$emit('docBuilder:typeChange', type);
         };
 
 
@@ -1567,9 +1566,6 @@
           if(!$scope.edit) return;
           if($scope.selected.key == item.key) $event.stopPropagation();
           else $scope.select($event, item);
-          /*item._item = item.item;
-          item._type = item.schema.type;
-          item._key = item.key;*/
           item.edit = true;
         };
 
